@@ -17,6 +17,7 @@ public class MySuperAI extends AI{
         //enlistForTournament(566201); //fuer Abgabe
         enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution(); //zum testen
         //hier irgendwas
+        //ja
     }
 
     @Override
