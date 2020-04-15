@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../ai.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/ai.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -19,13 +19,12 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../ai-libs/ai_libs.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/ai-libs/ai_libs.jar!/" />
+          <root url="file://$MODULE_DIR$/lib/ai-libs" />
         </CLASSES>
         <JAVADOC />
-        <NATIVE>
-          <root url="file://$MODULE_DIR$/../ai-libs/native" />
-        </NATIVE>
         <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/lib/ai-libs" recursive="false" />
       </library>
     </orderEntry>
   </component>
