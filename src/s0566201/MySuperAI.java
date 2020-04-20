@@ -34,6 +34,7 @@ public class MySuperAI extends AI{
         info.getOrientation(); // Blickrichtung zwischen -PI und +PI
         info.getAngularVelocity(); // aktuelle Drehgeschwindigkeit
 
+
         Track track = info.getTrack();
         track.getWidth();
         track.getHeight();
@@ -51,13 +52,47 @@ public class MySuperAI extends AI{
         //Berechne Schnittpunkt der beiden obigen, pruefe Abstand
 
 
-
         track.getObstacles(); // Hindernisse - nächste Übung
 
 
-        float drehbeschleunigungVonAlign = 0.1f;
-        return new DriverAction(1, drehbeschleunigungVonAlign);
-    }
+        //Current Checkpoint Coordinates
+        double currentX = info.getCurrentCheckpoint().getX();
+        double currentY = info.getCurrentCheckpoint().getY();
+
+        float distanceToDest = (float) (Math.sqrt(Math.pow(currentX - info.getX(), 2) + Math.pow(currentY - info.getY(), 2)));
+        float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
+
+        float wunschdrehgeschw;
+
+        if (currentY < info.getY()) angleToDest = -angleToDest;
+
+        if ((Math.abs(info.getOrientation() - angleToDest)) < 0.01f) {
+            wunschdrehgeschw = 0f;
+            System.out.println("Auto auf richtiger Bahn");
+        } else if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
+            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
+//            System.out.println("WunschdrehgeschwindigkeitsFormel");
+        } else if (angleToDest - info.getOrientation() >= 0){
+            wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
+//            System.out.println("Maximale Absolute POS Kacke");
+        } else  {
+            wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
+//            System.out.println("Maximale Absolute NEG Kacke");
+        }
+
+        float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
+//        if (wunschdrehgeschw > info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = info.getMaxAbsoluteAngularAcceleration();
+//        if (wunschdrehgeschw < -info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = -info.getMaxAbsoluteAngularAcceleration();
+
+//        System.out.println("Orientierung: " + info.getOrientation() + " Winkel: " + angleToDest + " " + " Drehbeschleunigung: " + drehbeschleunigungVonAlign);
+//        System.out.println((Math.abs(info.getOrientation() - angleToDest) < Math.abs(info.getAngularVelocity())) + " " + info.getAngularVelocity());
+//        System.out.println("Checkpoint Y | X " + currentY + " " + currentX);
+//        System.out.println("Meine Pos " + info.getX() + " " + info.getY());
+
+
+            return new DriverAction(1, drehbeschleunigungVonAlign);
+        }
+
 
     @Override
     public String getTextureResourceName() {
