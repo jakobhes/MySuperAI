@@ -62,23 +62,20 @@ public class MySuperAI extends AI{
         float distanceToDest = (float) (Math.sqrt(Math.pow(currentX - info.getX(), 2) + Math.pow(currentY - info.getY(), 2)));
         float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
 
-        float wunschdrehgeschw;
+        float wunschdrehgeschw = 0f;
 
-        if (currentY < info.getY()) angleToDest = -angleToDest;
-
-        if ((Math.abs(info.getOrientation() - angleToDest)) < 0.01f) {
-            wunschdrehgeschw = 0f;
-            System.out.println("Auto auf richtiger Bahn");
-        } else if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
-//            System.out.println("WunschdrehgeschwindigkeitsFormel");
-        } else if (angleToDest - info.getOrientation() >= 0){
-            wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-//            System.out.println("Maximale Absolute POS Kacke");
-        } else  {
-            wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
-//            System.out.println("Maximale Absolute NEG Kacke");
+        if (currentY < info.getY()) {
+            angleToDest = -angleToDest;
         }
+
+        float tolerance = 0.005f;
+
+        if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
+            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
+        } else if (angleToDest - info.getOrientation() >= tolerance){
+            wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
+        } else  if (angleToDest - info.getOrientation() <= -tolerance)
+            wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
 
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
 //        if (wunschdrehgeschw > info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = info.getMaxAbsoluteAngularAcceleration();
