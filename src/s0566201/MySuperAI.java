@@ -1,5 +1,7 @@
 package s0566201;
 
+// TODO: Frage: wie sollen wir das package nennen wenn wir beide dran arbeiten???
+
 import static org.lwjgl.opengl.GL11.*;
 
 import lenz.htw.ai4g.ai.AI;
@@ -22,7 +24,7 @@ public class MySuperAI extends AI{
 
     @Override
     public String getName() {
-        return "JAKOB";
+        return "Jakob Heschl, Tobi Hoffmann";
     }
 
     @Override
