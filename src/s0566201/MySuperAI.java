@@ -13,7 +13,11 @@ import java.awt.*;
 public class MySuperAI extends AI{
 
     public Vec2 carPosition;
+    public Vec2 initCarDirection;
     public Vec2 currentCheckpoint;
+    public Vec2 directionToCP;
+    public float angleBetweenCarAndCP;
+    public float rotationVelocity;
 
     public MySuperAI (Info info) {
         super(info);
@@ -34,16 +38,28 @@ public class MySuperAI extends AI{
         // Car Position as Vec2
         carPosition = new Vec2(info.getX(), info.getY());
 
+        // initial direction of car
+        initCarDirection = new Vec2(1,0);
+
         // CurrentCheckpoint as Vec2
         currentCheckpoint = new Vec2((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
 
+        // Direction vector from car to current checkpoint
+        directionToCP = MathVec.direction(carPosition, currentCheckpoint);
+
+        // initial angle of car direction and check point direction
+        angleBetweenCarAndCP = MathVec.angle(initCarDirection, directionToCP);
+
+
+
+        // current rotation velocity
+        rotationVelocity = info.getAngularVelocity();
 
         // align
         info.getX(); // meine Position
         info.getY();
         info.getCurrentCheckpoint(); // Zielposition
         info.getOrientation(); // Blickrichtung zwischen -PI und +PI
-        info.getAngularVelocity(); // aktuelle Drehgeschwindigkeit
 
 
         Track track = info.getTrack();
