@@ -12,6 +12,9 @@ import java.awt.*;
 
 public class MySuperAI extends AI{
 
+    public Vec2 carPosition;
+    public Vec2 currentCheckpoint;
+
     public MySuperAI (Info info) {
         super(info);
         //enlistForTournament(566201); //fuer Abgabe
@@ -27,6 +30,14 @@ public class MySuperAI extends AI{
 
     @Override
     public DriverAction update(boolean wasResetAfterCollision) {
+
+        // Car Position as Vec2
+        carPosition = new Vec2(info.getX(), info.getY());
+
+        // CurrentCheckpoint as Vec2
+        currentCheckpoint = new Vec2((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
+
+
         // align
         info.getX(); // meine Position
         info.getY();
@@ -63,6 +74,7 @@ public class MySuperAI extends AI{
         float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
 
         float wunschdrehgeschw = 0f;
+
 
         if (currentY < info.getY()) {
             angleToDest = -angleToDest;
