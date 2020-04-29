@@ -47,7 +47,8 @@ public class MySuperAI extends AI{
         currentCheckpoint = new Vector2f((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
 
         // Direction vector from car to current checkpoint
-        Vector2f.sub(carPosition, currentCheckpoint, directionToCP);
+        directionToCP = new Vector2f();
+        Vector2f.sub(currentCheckpoint, carPosition, directionToCP);
 
         // initial angle of car direction and check point direction
         angleOfCPDirection = Vector2f.angle(pointsToRight, directionToCP);
@@ -84,23 +85,10 @@ public class MySuperAI extends AI{
         double currentX = info.getCurrentCheckpoint().getX();
         double currentY = info.getCurrentCheckpoint().getY();
 
-        float distanceToDest = (float) (Math.sqrt(Math.pow(currentCheckpoint.x - carPosition.x, 2) + Math.pow(currentCheckpoint.x - carPosition.x, 2)));
+        float distanceToDest = (float) (Math.sqrt(Math.pow(currentCheckpoint.x - carPosition.x, 2) + Math.pow(currentCheckpoint.y - carPosition.y, 2)));
         float angleToDest = (float) Math.acos((currentCheckpoint.x - carPosition.x) / distanceToDest);
 
         float wunschdrehgeschw = 0f;
-
-
-        if (currentY < info.getY()) {
-            angleToDest = -angleToDest;
-        }
-
-            if (Math.abs(angleOfCPDirection - carOrientation) > Math.PI) {
-                // dreh nach rechts
-           } else {
-                // dreh nach links
-            }
-
-
 
         float tolerance = 0.005f;
 
@@ -111,17 +99,11 @@ public class MySuperAI extends AI{
         } else  if (angleToDest - carOrientation <= -tolerance)
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
 
+        if (Math.abs(angleOfCPDirection - carOrientation) > Math.PI) wunschdrehgeschw = -wunschdrehgeschw;
+
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
-//        if (wunschdrehgeschw > info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = info.getMaxAbsoluteAngularAcceleration();
-//        if (wunschdrehgeschw < -info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = -info.getMaxAbsoluteAngularAcceleration();
 
-//        System.out.println("Orientierung: " + info.getOrientation() + " Winkel: " + angleToDest + " " + " Drehbeschleunigung: " + drehbeschleunigungVonAlign);
-//        System.out.println((Math.abs(info.getOrientation() - angleToDest) < Math.abs(info.getAngularVelocity())) + " " + info.getAngularVelocity());
-//        System.out.println("Checkpoint Y | X " + currentY + " " + currentX);
-//        System.out.println("Meine Pos " + info.getX() + " " + info.getY());
-
-
-            return new DriverAction(1, drehbeschleunigungVonAlign);
+        return new DriverAction(1, drehbeschleunigungVonAlign);
         }
 
 
