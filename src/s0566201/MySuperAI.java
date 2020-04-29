@@ -6,18 +6,20 @@ import lenz.htw.ai4g.ai.AI;
 import lenz.htw.ai4g.ai.DriverAction;
 import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
+import org.lwjgl.util.vector.Vector2f;
 
 import java.awt.*;
 
 
 public class MySuperAI extends AI{
 
-    public Vec2 carPosition;
-    public Vec2 initCarDirection;
-    public Vec2 currentCheckpoint;
-    public Vec2 directionToCP;
-    public float angleBetweenCarAndCP;
+    public Vector2f carPosition;
+    public Vector2f pointsToRight;
+    public Vector2f currentCheckpoint;
+    public Vector2f directionToCP;
+    public float angleOfCPDirection;
     public float rotationVelocity;
+    public float carOrientation;
 
     public MySuperAI (Info info) {
         super(info);
@@ -36,30 +38,26 @@ public class MySuperAI extends AI{
     public DriverAction update(boolean wasResetAfterCollision) {
 
         // Car Position as Vec2
-        carPosition = new Vec2(info.getX(), info.getY());
+        carPosition = new Vector2f(info.getX(), info.getY());
 
-        // initial direction of car
-        initCarDirection = new Vec2(1,0);
+        // direction vector that points to right
+        pointsToRight = new Vector2f(1,0);
 
-        // CurrentCheckpoint as Vec2
-        currentCheckpoint = new Vec2((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
+        // CurrentCheckpoint as Vector
+        currentCheckpoint = new Vector2f((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
 
         // Direction vector from car to current checkpoint
-        directionToCP = MathVec.direction(carPosition, currentCheckpoint);
+        Vector2f.sub(carPosition, currentCheckpoint, directionToCP);
 
         // initial angle of car direction and check point direction
-        angleBetweenCarAndCP = MathVec.angle(initCarDirection, directionToCP);
+        angleOfCPDirection = Vector2f.angle(pointsToRight, directionToCP);
 
 
+        // orientation of car
+        carOrientation = info.getOrientation();
 
         // current rotation velocity
         rotationVelocity = info.getAngularVelocity();
-
-        // align
-        info.getX(); // meine Position
-        info.getY();
-        info.getCurrentCheckpoint(); // Zielposition
-        info.getOrientation(); // Blickrichtung zwischen -PI und +PI
 
 
         Track track = info.getTrack();
@@ -86,8 +84,8 @@ public class MySuperAI extends AI{
         double currentX = info.getCurrentCheckpoint().getX();
         double currentY = info.getCurrentCheckpoint().getY();
 
-        float distanceToDest = (float) (Math.sqrt(Math.pow(currentX - info.getX(), 2) + Math.pow(currentY - info.getY(), 2)));
-        float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
+        float distanceToDest = (float) (Math.sqrt(Math.pow(currentCheckpoint.x - carPosition.x, 2) + Math.pow(currentCheckpoint.x - carPosition.x, 2)));
+        float angleToDest = (float) Math.acos((currentCheckpoint.x - carPosition.x) / distanceToDest);
 
         float wunschdrehgeschw = 0f;
 
@@ -96,13 +94,21 @@ public class MySuperAI extends AI{
             angleToDest = -angleToDest;
         }
 
+            if (Math.abs(angleOfCPDirection - carOrientation) > Math.PI) {
+                // dreh nach rechts
+           } else {
+                // dreh nach links
+            }
+
+
+
         float tolerance = 0.005f;
 
-        if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
-        } else if (angleToDest - info.getOrientation() >= tolerance){
+        if (Math.abs(angleToDest - carOrientation) < Math.abs(rotationVelocity)) {
+            wunschdrehgeschw = (angleToDest - carOrientation) * info.getMaxAbsoluteAngularVelocity() / 2*rotationVelocity;
+        } else if (angleToDest - carOrientation >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-        } else  if (angleToDest - info.getOrientation() <= -tolerance)
+        } else  if (angleToDest - carOrientation <= -tolerance)
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
 
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
