@@ -34,11 +34,12 @@ public class MySuperAI extends AI{
 
     @Override
     public String getName() {
-        return "JAKOB";
+        return "Jakob & Tobi";
     }
 
     @Override
     public DriverAction update(boolean wasResetAfterCollision) {
+
 
         // Car Position as Vec2
         carPosition = new Vec2(info.getX(), info.getY());
@@ -59,13 +60,33 @@ public class MySuperAI extends AI{
         checkpointOrientation = (carToCheckpoint.b > 0) ? MathVec.angle(pointToRight, carToCheckpoint) : (float)Math.PI*2 - MathVec.angle(pointToRight, carToCheckpoint);
 
         // Threshhold of orientation alignment
-        steeringThreshhold = 0.1f;
+        steeringThreshhold = 0.005f;
 
         // threshhold of steering strength
-        steeringStrengthThreshhold = 1f;
+        steeringStrengthThreshhold = info.getAngularVelocity() / 2;
 
         // current rotation velocity
         rotationVelocity = info.getAngularVelocity();
+
+        /**
+         *
+         * BESCHLEUNIGUNG
+         *
+         */
+
+        float breakRadius = 50;
+        float checkpointRadius = 2f;
+        float speed = info.getMaxVelocity();
+
+        if( MathVec.abs(carToCheckpoint) < breakRadius) {
+            speed = MathVec.abs(carToCheckpoint) * info.getMaxVelocity() / breakRadius / 2;
+            if ( MathVec.abs(carToCheckpoint) < checkpointRadius) {
+                speed = info.getMaxVelocity();
+//                Vec2 currentSpeed = new Vec2(info.getVelocity().x, info.getVelocity().y);
+//                speed -= MathVec.abs(MathVec.direction(currentSpeed, checkpointPosition));
+            }
+        }
+
 
         if(Math.abs(checkpointOrientation - carOrientation) > steeringThreshhold) {
             // take a turn
@@ -73,7 +94,7 @@ public class MySuperAI extends AI{
                 //turn left (+)
                 if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
                     //lower the steering strength
-                    steeringStrength = info.getMaxAbsoluteAngularVelocity() - rotationVelocity;
+                    steeringStrength = (checkpointOrientation - carOrientation) * info.getMaxAbsoluteAngularVelocity() / steeringStrengthThreshhold;
                 } else {
                     // maximum steering strength
                     steeringStrength = info.getMaxAbsoluteAngularVelocity();
@@ -82,7 +103,7 @@ public class MySuperAI extends AI{
                 // turn right (-)
                 if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
                     //lower the steering strength
-                    steeringStrength = - (info.getMaxAbsoluteAngularVelocity() - rotationVelocity);
+                    steeringStrength = (checkpointOrientation - carOrientation) * info.getMaxAbsoluteAngularVelocity() / steeringStrengthThreshhold;
                 } else {
                     // maximum steering strength
                     steeringStrength = - info.getMaxAbsoluteAngularVelocity();
@@ -90,8 +111,6 @@ public class MySuperAI extends AI{
             }
         } else {
             // don't turn
-            System.out.println("the direction is fine");
-
             steeringStrength = 0;
         }
 
@@ -102,8 +121,16 @@ public class MySuperAI extends AI{
         Polygon obs = obstacles[0];
         track.getObstacles(); // Hindernisse - nächste Übung
 
+        float absoluteSteeringStrength = steeringStrength - info.getAngularVelocity();
 
-        return new DriverAction(1, steeringStrength);
+        if( absoluteSteeringStrength >= 0 && absoluteSteeringStrength > info.getMaxAbsoluteAngularAcceleration()) {
+            absoluteSteeringStrength = info.getMaxAbsoluteAngularAcceleration();
+        } else if (Math.abs(absoluteSteeringStrength) > info.getMaxAbsoluteAngularAcceleration()) {
+            absoluteSteeringStrength = -info.getMaxAbsoluteAngularAcceleration();
+        }
+
+        System.out.println(speed);
+        return new DriverAction(speed, absoluteSteeringStrength);
     }
 
 
