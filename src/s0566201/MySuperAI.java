@@ -19,8 +19,10 @@ public class MySuperAI extends AI{
     public Vec2 pointToRight;
     public float checkpointOrientation;
     public float steeringStrength;
-    public float steeringThreshhold;
+    public float steeringThreshold;
     public float steeringStrengthThreshhold;
+    public float rotationToComplete;
+    float accelaration;
 
     public float rotationVelocity;
 
@@ -34,7 +36,7 @@ public class MySuperAI extends AI{
 
     @Override
     public String getName() {
-        return "Jakob & Tobi";
+        return "Jakobi";
     }
 
     @Override
@@ -45,7 +47,7 @@ public class MySuperAI extends AI{
         carPosition = new Vec2(info.getX(), info.getY());
 
         // Orientation of the car (as an Angle)
-        carOrientation = (info.getOrientation() > 0) ? info.getOrientation() : info.getOrientation() + (float)Math.PI*2;
+        carOrientation = info.getOrientation();
 
         // Position of the Current Checkpoint as Vec2
         checkpointPosition = new Vec2((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
@@ -57,62 +59,44 @@ public class MySuperAI extends AI{
         pointToRight = new Vec2(1,0);
 
         // Orientation of direction vector from car to checkpoint (as an Angle)
-        checkpointOrientation = (carToCheckpoint.b > 0) ? MathVec.angle(pointToRight, carToCheckpoint) : (float)Math.PI*2 - MathVec.angle(pointToRight, carToCheckpoint);
+        checkpointOrientation = (carToCheckpoint.b > 0) ? MathVec.angle(pointToRight, carToCheckpoint) : - MathVec.angle(pointToRight, carToCheckpoint);
 
-        // Threshhold of orientation alignment
-        steeringThreshhold = 0.005f;
+        // Threshold of orientation alignment
+        steeringThreshold = 0.05f;
 
-        // threshhold of steering strength
-        steeringStrengthThreshhold = info.getAngularVelocity() / 2;
+        // Threshold of steering strength
+        steeringStrengthThreshhold = (float)Math.PI/2;
 
         // current rotation velocity
         rotationVelocity = info.getAngularVelocity();
 
-        /**
-         *
-         * BESCHLEUNIGUNG
-         *
-         */
 
-        float breakRadius = 50;
-        float checkpointRadius = 2f;
-        float speed = info.getMaxVelocity();
+        rotationToComplete = Math.abs(checkpointOrientation - carOrientation);
 
-        if( MathVec.abs(carToCheckpoint) < breakRadius) {
-            speed = MathVec.abs(carToCheckpoint) * info.getMaxVelocity() / breakRadius / 2;
-            if ( MathVec.abs(carToCheckpoint) < checkpointRadius) {
-                speed = info.getMaxVelocity();
-//                Vec2 currentSpeed = new Vec2(info.getVelocity().x, info.getVelocity().y);
-//                speed -= MathVec.abs(MathVec.direction(currentSpeed, checkpointPosition));
-            }
-        }
-
-
-        if(Math.abs(checkpointOrientation - carOrientation) > steeringThreshhold) {
-            // take a turn
-            if (checkpointOrientation - carOrientation > 0) {
-                //turn left (+)
-                if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
-                    //lower the steering strength
-                    steeringStrength = (checkpointOrientation - carOrientation) * info.getMaxAbsoluteAngularVelocity() / steeringStrengthThreshhold;
-                } else {
-                    // maximum steering strength
-                    steeringStrength = info.getMaxAbsoluteAngularVelocity();
-                }
-           } else {
-                // turn right (-)
-                if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
-                    //lower the steering strength
-                    steeringStrength = (checkpointOrientation - carOrientation) * info.getMaxAbsoluteAngularVelocity() / steeringStrengthThreshhold;
-                } else {
-                    // maximum steering strength
-                    steeringStrength = - info.getMaxAbsoluteAngularVelocity();
-                }
-            }
-        } else {
+        if(rotationToComplete < steeringThreshold) {
             // don't turn
             steeringStrength = 0;
+        } else {
+            // take a turn
+            if (rotationToComplete < steeringStrengthThreshhold) {
+                //lower the steering strength
+                steeringStrength = (checkpointOrientation - carOrientation) * info.getMaxAbsoluteAngularVelocity() / steeringStrengthThreshhold;
+            } else {
+                // maximum steering strength
+                steeringStrength = (steeringStrength > 0) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
+            }
         }
+
+        float absoluteSteeringStrength = steeringStrength - info.getAngularVelocity();
+
+
+        if( absoluteSteeringStrength >= 0 && absoluteSteeringStrength > info.getMaxAbsoluteAngularAcceleration()) {
+            absoluteSteeringStrength = info.getMaxAbsoluteAngularAcceleration();
+        } else if (Math.abs(absoluteSteeringStrength) > info.getMaxAbsoluteAngularAcceleration()) {
+            absoluteSteeringStrength = -info.getMaxAbsoluteAngularAcceleration();
+        }
+
+
 
         Track track = info.getTrack();
         track.getWidth();
@@ -121,16 +105,31 @@ public class MySuperAI extends AI{
         Polygon obs = obstacles[0];
         track.getObstacles(); // Hindernisse - nächste Übung
 
-        float absoluteSteeringStrength = steeringStrength - info.getAngularVelocity();
 
-        if( absoluteSteeringStrength >= 0 && absoluteSteeringStrength > info.getMaxAbsoluteAngularAcceleration()) {
-            absoluteSteeringStrength = info.getMaxAbsoluteAngularAcceleration();
-        } else if (Math.abs(absoluteSteeringStrength) > info.getMaxAbsoluteAngularAcceleration()) {
-            absoluteSteeringStrength = -info.getMaxAbsoluteAngularAcceleration();
+        /**
+         *
+         * BESCHLEUNIGUNG
+         *
+         */
+
+        float breakRadius = 30;
+        float checkpointRadius = 1f;
+        float speed;
+
+        if( MathVec.abs(carToCheckpoint) < breakRadius) {
+            speed = MathVec.abs(carToCheckpoint) * info.getMaxVelocity() / breakRadius / 4;
+            if ( MathVec.abs(carToCheckpoint) < checkpointRadius) {
+                Vec2 currentSpeedVector = new Vec2(info.getVelocity().x, info.getVelocity().y);
+                float currentSpeed = MathVec.abs(currentSpeedVector);
+                accelaration = info.getMaxVelocity() - currentSpeed / 1;
+                accelaration = (accelaration > info.getMaxVelocity()) ? info.getMaxVelocity() : accelaration;
+                speed = accelaration;
+            }
+        } else {
+            speed = info.getMaxVelocity();
         }
-
-        System.out.println(speed);
         return new DriverAction(speed, absoluteSteeringStrength);
+
     }
 
 
