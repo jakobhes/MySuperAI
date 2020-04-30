@@ -18,7 +18,10 @@ public class MySuperAI extends AI{
     public Vec2 carToCheckpoint;
     public Vec2 pointToRight;
     public float checkpointOrientation;
-    public float tolerance;
+    public float steeringStrength;
+    public float steeringThreshhold;
+    public float steeringStrengthThreshhold;
+
     public float rotationVelocity;
 
     public MySuperAI (Info info) {
@@ -55,74 +58,53 @@ public class MySuperAI extends AI{
         // Orientation of direction vector from car to checkpoint (as an Angle)
         checkpointOrientation = (carToCheckpoint.b > 0) ? MathVec.angle(pointToRight, carToCheckpoint) : (float)Math.PI*2 - MathVec.angle(pointToRight, carToCheckpoint);
 
-        // tolerance of orientation alignment
-        tolerance = 2f;
+        // Threshhold of orientation alignment
+        steeringThreshhold = 0.1f;
+
+        // threshhold of steering strength
+        steeringStrengthThreshhold = 1f;
 
         // current rotation velocity
         rotationVelocity = info.getAngularVelocity();
 
-        if(Math.abs(checkpointOrientation - carOrientation) > tolerance) {
+        if(Math.abs(checkpointOrientation - carOrientation) > steeringThreshhold) {
+            // take a turn
             if (checkpointOrientation - carOrientation > 0) {
                 //turn left (+)
-                rotationVelocity = 0.1f;
+                if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
+                    //lower the steering strength
+                    steeringStrength = info.getMaxAbsoluteAngularVelocity() - rotationVelocity;
+                } else {
+                    // maximum steering strength
+                    steeringStrength = info.getMaxAbsoluteAngularVelocity();
+                }
            } else {
                 // turn right (-)
-                rotationVelocity = -0.1f;
+                if (Math.abs(checkpointOrientation - carOrientation) <  steeringStrengthThreshhold) {
+                    //lower the steering strength
+                    steeringStrength = - (info.getMaxAbsoluteAngularVelocity() - rotationVelocity);
+                } else {
+                    // maximum steering strength
+                    steeringStrength = - info.getMaxAbsoluteAngularVelocity();
+                }
             }
         } else {
             // don't turn
-            rotationVelocity = 0;
+            System.out.println("the direction is fine");
+
+            steeringStrength = 0;
         }
-
-
 
         Track track = info.getTrack();
         track.getWidth();
         track.getHeight();
         Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
         Polygon obs = obstacles[0];
-
-        obs.contains(info.getX(), info.getY()); //ist der Punkt im Hinderniss?
-
-        int numberofObstacles = obs.npoints; //Anzahl der Punkte des Hindernisses
-        //A = obs.xpoints[0], obs.ypoints[0];
-        //B = obs.xpoints[1], obs.ypoints[1]; //flee to get away from these points, collison avoidance viel besser
-        //Erstelle Streck von A und B
-        //Erstelle Richtungsvektor
-        info.getVelocity();
-        //Berechne Schnittpunkt der beiden obigen, pruefe Abstand
-
-
         track.getObstacles(); // Hindernisse - nächste Übung
 
 
-        //Current Checkpoint Coordinates
-//        double currentX = info.getCurrentCheckpoint().getX();
-//        double currentY = info.getCurrentCheckpoint().getY();
-//
-//        float distanceToDest = (float) (Math.sqrt(Math.pow(currentX - info.getX(), 2) + Math.pow(currentY - info.getY(), 2)));
-//        float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
-//
-//        float wunschdrehgeschw = 0f;
-//
-//
-//        if (currentY < info.getY()) {
-//            angleToDest = -angleToDest;
-//        }
-//
-//        float tolerance = 0.005f;
-//
-//        if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
-//            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
-//        } else if (angleToDest - info.getOrientation() >= tolerance){
-//            wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-//        } else  if (angleToDest - info.getOrientation() <= -tolerance)
-//            wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
-//
-//        float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
-
-            return new DriverAction(1, -1);
-        }
+        return new DriverAction(1, steeringStrength);
+    }
 
 
     @Override
