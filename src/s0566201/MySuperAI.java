@@ -7,9 +7,7 @@ import lenz.htw.ai4g.ai.DriverAction;
 import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
-
 import java.awt.*;
-
 
 public class MySuperAI extends AI{
 
@@ -40,6 +38,8 @@ public class MySuperAI extends AI{
         track.getHeight();
         Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
         Polygon obs = obstacles[0];
+//        obs.
+//        Polygon borderUpLeft = obstacles[1];
 
         obs.contains(info.getX(), info.getY()); //ist der Punkt im Hinderniss?
 
@@ -68,7 +68,7 @@ public class MySuperAI extends AI{
 
         //---------------------------------------ARRIVE----------------------------------------
 
-        float destRad = 5;
+        float destRad = 10;
         float breakRad = info.getVelocity().length();
         float speed = info.getMaxVelocity();
         if (distanceToDest < breakRad) {
@@ -90,11 +90,37 @@ public class MySuperAI extends AI{
             wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / Math.abs(info.getAngularVelocity()));
         } else if (angleBetweenPosAndDest >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-        } else  {
+        } else {
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
         }
-
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
+
+        //--------------------------COLLISION / OBSTACLE AVOIDANCE-------------------------------
+
+        //Single Ray (middle)
+        float rayCastLength = 5;
+        Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
+        Vector2f rayCastMiddle = new Vector2f();
+        Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
+
+        //Ray Left
+        //orientation vektor drehen
+        float radian = 1;
+        float ox = orientationWithLength.x;
+        float oy = orientationWithLength.y;
+        Vector2f rayLeftOrientation = new Vector2f((float)(Math.cos(radian) * ox - Math.sin(radian) * oy), (float)(Math.sin(radian) * ox + Math.cos(radian) * oy));
+        Vector2f rayLeft = new Vector2f();
+        Vector2f.add(currentPos, rayLeftOrientation, rayLeft);
+
+
+        //Ray Right
+        Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-radian) * ox - Math.sin(2*Math.PI-radian) * oy), (float)(Math.sin(2*Math.PI-radian) * ox + Math.cos(2*Math.PI-radian) * oy));
+        Vector2f rayRight = new Vector2f();
+        Vector2f.add(currentPos, rayRightOrientation, rayRight);
+
+        System.out.println("MITE " + rayCastMiddle);
+        System.out.println("LINKS " + rayLeft);
+        System.out.println("RECHTS " + rayRight);
 
         return new DriverAction(acceleration, drehbeschleunigungVonAlign);
     }
