@@ -6,6 +6,7 @@ import lenz.htw.ai4g.ai.AI;
 import lenz.htw.ai4g.ai.DriverAction;
 import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
+import org.lwjgl.util.vector.Vector2f;
 
 import java.awt.*;
 
@@ -34,7 +35,6 @@ public class MySuperAI extends AI{
         info.getOrientation(); // Blickrichtung zwischen -PI und +PI
         info.getAngularVelocity(); // aktuelle Drehgeschwindigkeit
 
-
         Track track = info.getTrack();
         track.getWidth();
         track.getHeight();
@@ -50,45 +50,39 @@ public class MySuperAI extends AI{
         //Erstelle Richtungsvektor
         info.getVelocity();
         //Berechne Schnittpunkt der beiden obigen, pruefe Abstand
-
-
         track.getObstacles(); // Hindernisse - nächste Übung
-
 
         //Current Checkpoint Coordinates
         double currentX = info.getCurrentCheckpoint().getX();
         double currentY = info.getCurrentCheckpoint().getY();
 
         float distanceToDest = (float) (Math.sqrt(Math.pow(currentX - info.getX(), 2) + Math.pow(currentY - info.getY(), 2)));
-        float angleToDest = (float) Math.acos((currentX - info.getX()) / distanceToDest);
-
+        Vector2f orientation = new Vector2f((float)(Math.cos(info.getOrientation())), (float) (Math.sin(info.getOrientation())));
+        Vector2f currentCheckpoint = new Vector2f((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
+        Vector2f currentPos = new Vector2f(info.getX(), info.getY());
+        Vector2f destVektor = new Vector2f();
+        Vector2f.sub(currentCheckpoint, currentPos, destVektor);
+        float dot = orientation.x * -destVektor.y + orientation.y * destVektor.x;
+        float angleBetweenPosAndDest = Vector2f.angle(orientation, destVektor);
         float wunschdrehgeschw = 0f;
+        System.out.println(dot);
 
-        if (currentY < info.getY()) {
-            angleToDest = -angleToDest;
+        if (dot > 0) {
+            angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
-        float tolerance = 0.005f;
-
-        if (Math.abs(angleToDest - info.getOrientation()) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleToDest - info.getOrientation()) * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity();
-        } else if (angleToDest - info.getOrientation() >= tolerance){
+        float tolerance = 0.0001f;
+        if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
+            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity());
+        } else if (angleBetweenPosAndDest >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-        } else  if (angleToDest - info.getOrientation() <= -tolerance)
+        } else  if (angleBetweenPosAndDest <= -tolerance)
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
 
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
-//        if (wunschdrehgeschw > info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = info.getMaxAbsoluteAngularAcceleration();
-//        if (wunschdrehgeschw < -info.getMaxAbsoluteAngularAcceleration()) wunschdrehgeschw = -info.getMaxAbsoluteAngularAcceleration();
 
-//        System.out.println("Orientierung: " + info.getOrientation() + " Winkel: " + angleToDest + " " + " Drehbeschleunigung: " + drehbeschleunigungVonAlign);
-//        System.out.println((Math.abs(info.getOrientation() - angleToDest) < Math.abs(info.getAngularVelocity())) + " " + info.getAngularVelocity());
-//        System.out.println("Checkpoint Y | X " + currentY + " " + currentX);
-//        System.out.println("Meine Pos " + info.getX() + " " + info.getY());
-
-
-            return new DriverAction(1, drehbeschleunigungVonAlign);
-        }
+        return new DriverAction(28, drehbeschleunigungVonAlign);
+    }
 
 
     @Override
