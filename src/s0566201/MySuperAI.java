@@ -55,7 +55,7 @@ public class MySuperAI extends AI {
         Polygon obs = obstacles[0];
         track.getObstacles(); // Hindernisse - nächste Übung
 
-        return new DriverAction(accelarate(30,1), steering(0.05f, (float)Math.PI/2));
+        return new DriverAction(accelarate(50,1), steering(0.01f, (float)Math.PI/3));
     }
 
     @Override
