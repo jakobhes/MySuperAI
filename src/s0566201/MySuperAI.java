@@ -73,7 +73,7 @@ public class MySuperAI extends AI{
 
         float tolerance = 0.0001f;
         if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*info.getAngularVelocity());
+            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 3*info.getAngularVelocity());
         } else if (angleBetweenPosAndDest >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
         } else  if (angleBetweenPosAndDest <= -tolerance)
