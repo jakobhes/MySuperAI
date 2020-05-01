@@ -67,13 +67,28 @@ public class MySuperAI extends AI{
         float wunschdrehgeschw = 0f;
         System.out.println(dot);
 
+        //---------------------------------------ARRIVE----------------------------------------
+
+        float destRad = 5;
+        float breakRad = info.getVelocity().length();
+        float speed = info.getMaxVelocity();
+        if (distanceToDest < breakRad) {
+            speed = (distanceToDest * info.getMaxVelocity() / breakRad);
+            if (distanceToDest < destRad) {
+                speed = info.getMaxVelocity();
+            }
+        }
+        float acceleration = speed - info.getVelocity().length() / 1;
+
+
+        //----------------------------------------ALIGN----------------------------------------
         if (dot > 0) {
             angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
         float tolerance = 0.0001f;
         if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 3*info.getAngularVelocity());
+            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 4*info.getAngularVelocity());
         } else if (angleBetweenPosAndDest >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
         } else  if (angleBetweenPosAndDest <= -tolerance)
@@ -81,7 +96,7 @@ public class MySuperAI extends AI{
 
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
 
-        return new DriverAction(28, drehbeschleunigungVonAlign);
+        return new DriverAction(acceleration, drehbeschleunigungVonAlign);
     }
 
 
