@@ -85,7 +85,7 @@ public class MySuperAI extends AI{
             angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
-        float tolerance = 0.001f;
+        float tolerance = 0.0000000001f;
         if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
             wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / Math.abs(info.getAngularVelocity()));
         } else if (angleBetweenPosAndDest >= tolerance){
@@ -98,7 +98,6 @@ public class MySuperAI extends AI{
 
         return new DriverAction(acceleration, drehbeschleunigungVonAlign);
     }
-
 
     @Override
     public String getTextureResourceName() {
