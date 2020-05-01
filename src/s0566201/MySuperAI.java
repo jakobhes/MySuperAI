@@ -16,7 +16,7 @@ public class MySuperAI extends AI{
     public MySuperAI (Info info) {
         super(info);
         //enlistForTournament(566201); //fuer Abgabe
-        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution(); //zum testen
+        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
         //hier irgendwas
         //ja
     }
@@ -64,8 +64,7 @@ public class MySuperAI extends AI{
         Vector2f.sub(currentCheckpoint, currentPos, destVektor);
         float dot = orientation.x * -destVektor.y + orientation.y * destVektor.x;
         float angleBetweenPosAndDest = Vector2f.angle(orientation, destVektor);
-        float wunschdrehgeschw = 0f;
-        System.out.println(dot);
+        float wunschdrehgeschw;
 
         //---------------------------------------ARRIVE----------------------------------------
 
@@ -86,13 +85,14 @@ public class MySuperAI extends AI{
             angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
-        float tolerance = 0.0001f;
+        float tolerance = 0.001f;
         if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 4*info.getAngularVelocity());
+            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / Math.abs(info.getAngularVelocity()));
         } else if (angleBetweenPosAndDest >= tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
-        } else  if (angleBetweenPosAndDest <= -tolerance)
+        } else  {
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
+        }
 
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
 
