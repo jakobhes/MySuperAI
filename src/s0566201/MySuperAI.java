@@ -11,6 +11,10 @@ import java.awt.*;
 
 public class MySuperAI extends AI{
 
+    Vector2f rayCastMiddle = new Vector2f();
+    Vector2f rayLeft = new Vector2f();
+    Vector2f rayRight = new Vector2f();
+
     public MySuperAI (Info info) {
         super(info);
         //enlistForTournament(566201); //fuer Abgabe
@@ -38,8 +42,6 @@ public class MySuperAI extends AI{
         track.getHeight();
         Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
         Polygon obs = obstacles[0];
-//        obs.
-//        Polygon borderUpLeft = obstacles[1];
 
         obs.contains(info.getX(), info.getY()); //ist der Punkt im Hinderniss?
 
@@ -93,36 +95,42 @@ public class MySuperAI extends AI{
         } else {
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
         }
-        float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
+
 
         //--------------------------COLLISION / OBSTACLE AVOIDANCE-------------------------------
 
         //Single Ray (middle)
-        float rayCastLength = 5;
+        float rayCastLength = info.getVelocity().length();
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
-        Vector2f rayCastMiddle = new Vector2f();
         Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
 
         //Ray Left
         //orientation vektor drehen
-        float radian = 1;
+        float radian = (float)Math.PI/8;
         float ox = orientationWithLength.x;
         float oy = orientationWithLength.y;
         Vector2f rayLeftOrientation = new Vector2f((float)(Math.cos(radian) * ox - Math.sin(radian) * oy), (float)(Math.sin(radian) * ox + Math.cos(radian) * oy));
-        Vector2f rayLeft = new Vector2f();
         Vector2f.add(currentPos, rayLeftOrientation, rayLeft);
-
 
         //Ray Right
         Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-radian) * ox - Math.sin(2*Math.PI-radian) * oy), (float)(Math.sin(2*Math.PI-radian) * ox + Math.cos(2*Math.PI-radian) * oy));
-        Vector2f rayRight = new Vector2f();
         Vector2f.add(currentPos, rayRightOrientation, rayRight);
 
-        System.out.println("MITE " + rayCastMiddle);
-        System.out.println("LINKS " + rayLeft);
-        System.out.println("RECHTS " + rayRight);
+        for (int i = 2; i < obstacles.length; i++) {
+            if (obstacles[i].contains(rayLeft.x, rayLeft.y)) wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
+            else if (obstacles[i].contains(rayRight.x, rayRight.y)) wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
+        }
+        float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
 
         return new DriverAction(acceleration, drehbeschleunigungVonAlign);
+    }
+
+
+    public Polygon findObstacle(Polygon[] obstacles, Vector2f ray) {
+        for (int i = 0; i < obstacles.length; i++) {
+            if (obstacles[i].contains(ray.x, ray.y)) return obstacles[i];
+        }
+        return null;
     }
 
     @Override
@@ -136,6 +144,17 @@ public class MySuperAI extends AI{
         glColor3f(1, 0, 0);
         glVertex2f(info.getX(), info.getY());
         glVertex2d(info.getCurrentCheckpoint().getX(), info.getCurrentCheckpoint().getY());
+        glEnd();
+        glBegin(GL_LINES);
+        glColor3f(0,0,1);
+        glVertex2f(info.getX(), info.getY());
+        glVertex2d(rayCastMiddle.x, rayCastMiddle.y);
+        glVertex2f(info.getX(), info.getY());
+        glVertex2d(rayCastMiddle.x, rayCastMiddle.y);
+        glVertex2f(info.getX(), info.getY());
+        glVertex2d(rayLeft.x, rayLeft.y);
+        glVertex2f(info.getX(), info.getY());
+        glVertex2d(rayRight.x, rayRight.y);
         glEnd();
     }
 }
