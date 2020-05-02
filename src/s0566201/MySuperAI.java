@@ -70,8 +70,8 @@ public class MySuperAI extends AI{
 
         //---------------------------------------ARRIVE----------------------------------------
 
-        float destRad = 10;
-        float breakRad = info.getVelocity().length();
+        float destRad = 3;
+        float breakRad = info.getVelocity().length()/1.3f;
         float speed = info.getMaxVelocity();
         if (distanceToDest < breakRad) {
             speed = (distanceToDest * info.getMaxVelocity() / breakRad);
@@ -87,10 +87,11 @@ public class MySuperAI extends AI{
             angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
-        float tolerance = 0.0000000001f;
-        if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())) {
-            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / Math.abs(info.getAngularVelocity()));
-        } else if (angleBetweenPosAndDest >= tolerance){
+        float tolerance = 0.0001f;
+
+        if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())/2) {
+            wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*Math.abs(info.getAngularVelocity()));
+        } else if (angleBetweenPosAndDest > tolerance){
             wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
         } else {
             wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
@@ -100,7 +101,7 @@ public class MySuperAI extends AI{
         //--------------------------COLLISION / OBSTACLE AVOIDANCE-------------------------------
 
         //Single Ray (middle)
-        float rayCastLength = info.getVelocity().length();
+        float rayCastLength = 2*info.getVelocity().length();
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
         Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
 
@@ -117,21 +118,16 @@ public class MySuperAI extends AI{
         Vector2f.add(currentPos, rayRightOrientation, rayRight);
 
         for (int i = 2; i < obstacles.length; i++) {
-            if (obstacles[i].contains(rayLeft.x, rayLeft.y)) wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
-            else if (obstacles[i].contains(rayRight.x, rayRight.y)) wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
+            if (obstacles[i].contains(rayLeft.x, rayLeft.y))
+                wunschdrehgeschw = -info.getMaxAbsoluteAngularVelocity();
+            else if (obstacles[i].contains(rayRight.x, rayRight.y))
+                wunschdrehgeschw = info.getMaxAbsoluteAngularVelocity();
         }
         float drehbeschleunigungVonAlign = (wunschdrehgeschw - info.getAngularVelocity()) / 1;
 
         return new DriverAction(acceleration, drehbeschleunigungVonAlign);
     }
 
-
-    public Polygon findObstacle(Polygon[] obstacles, Vector2f ray) {
-        for (int i = 0; i < obstacles.length; i++) {
-            if (obstacles[i].contains(ray.x, ray.y)) return obstacles[i];
-        }
-        return null;
-    }
 
     @Override
     public String getTextureResourceName() {
