@@ -71,7 +71,7 @@ public class MySuperAI extends AI{
         //---------------------------------------ARRIVE----------------------------------------
 
         float destRad = 3;
-        float breakRad = info.getVelocity().length()/1.3f;
+        float breakRad = info.getVelocity().length()/1.5f;
         float speed = info.getMaxVelocity();
         if (distanceToDest < breakRad) {
             speed = (distanceToDest * info.getMaxVelocity() / breakRad);
@@ -87,7 +87,7 @@ public class MySuperAI extends AI{
             angleBetweenPosAndDest = -angleBetweenPosAndDest;
         }
 
-        float tolerance = 0.0001f;
+        float tolerance = 0.000001f;
 
         if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())/2) {
             wunschdrehgeschw = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*Math.abs(info.getAngularVelocity()));
@@ -101,7 +101,12 @@ public class MySuperAI extends AI{
         //--------------------------COLLISION / OBSTACLE AVOIDANCE-------------------------------
 
         //Single Ray (middle)
-        float rayCastLength = 2*info.getVelocity().length();
+        float rayCastLength;
+        if (distanceToDest <= 4*breakRad) {
+            rayCastLength = info.getVelocity().length();
+        } else {
+            rayCastLength = 4*info.getVelocity().length();
+        }
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
         Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
 
