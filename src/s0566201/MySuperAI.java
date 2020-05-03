@@ -45,19 +45,6 @@ public class MySuperAI extends AI{
 
         distanceToDest = (float) (Math.sqrt(Math.pow(currentCheckpoint.x - info.getX(), 2) + Math.pow(currentCheckpoint.y - info.getY(), 2)));
 
-        //---------------------------------------ARRIVE----------------------------------------
-        //TODO: WRITE METHOD
-        float destRad = 3;
-        float breakRad = info.getVelocity().length()/1.5f; //TODO: Tweak
-        float speed = info.getMaxVelocity();
-        if (distanceToDest < breakRad) {
-            speed = (distanceToDest * info.getMaxVelocity() / breakRad);
-            if (distanceToDest < destRad) {
-                speed = info.getMaxVelocity();
-            }
-        }
-        float acceleration = speed - info.getVelocity().length() / 1;
-
 
         //----------------------------------------ALIGN----------------------------------------
         //TODO: WRITE METHOD
@@ -78,7 +65,7 @@ public class MySuperAI extends AI{
 
         //TODO: Write method, put 4 into variable
         float rayCastLength = info.getVelocity().length();
-        if (distanceToDest >= 4*breakRad) {
+        if (distanceToDest >= 4*30) {
             rayCastLength = 4 * info.getVelocity().length();
         }
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
@@ -108,7 +95,7 @@ public class MySuperAI extends AI{
         }
         float angularVelocity = (requiredAngularVelocity - info.getAngularVelocity()) / 1;
 
-        return new DriverAction(acceleration, angularVelocity);
+        return new DriverAction(acceleration(arrive(3f,50f)), angularVelocity);
     }
 
     @Override
@@ -135,4 +122,19 @@ public class MySuperAI extends AI{
 //        glVertex2d(rayRight.x, rayRight.y);
 //        glEnd();
     }
+
+    public float arrive(float destinationRadius, float baseBreakRadius) {
+        if (distanceToDest >= info.getVelocity().length()/baseBreakRadius) return info.getMaxVelocity();
+        else {
+            //if (distanceToDest < destinationRadius) return info.getMaxVelocity();
+            return distanceToDest * info.getMaxVelocity() / baseBreakRadius;
+        }
+    }
+
+    public float acceleration(float speed) {
+        return speed - info.getVelocity().length() / 1;
+    }
+
+
+
 }
