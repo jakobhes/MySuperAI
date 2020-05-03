@@ -45,54 +45,9 @@ public class MySuperAI extends AI{
 
         distanceToDest = (float) (Math.sqrt(Math.pow(currentCheckpoint.x - info.getX(), 2) + Math.pow(currentCheckpoint.y - info.getY(), 2)));
 
+        align();
+        avoidObstacle(50);
 
-        //----------------------------------------ALIGN----------------------------------------
-        //TODO: WRITE METHOD
-        float angleBetweenPosAndDest = Vector2f.angle(orientation, destVector);
-        float dot = orientation.x * -destVector.y + orientation.y * destVector.x;
-        if (dot > 0)  {
-            angleBetweenPosAndDest = -angleBetweenPosAndDest;
-        }
-
-        float tolerance = 0.000001f;
-
-        if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())/2) {
-            requiredAngularVelocity = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*Math.abs(info.getAngularVelocity())); //TODO: Tweak
-        } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
-
-        //--------------------------COLLISION / OBSTACLE AVOIDANCE-------------------------------
-        Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
-
-        //TODO: Write method, put 4 into variable
-        float rayCastLength = info.getVelocity().length();
-        if (distanceToDest >= 4*30) {
-            rayCastLength = 4 * info.getVelocity().length();
-        }
-        Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
-
-        //Single Ray (middle)
-        Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
-
-        //turn orientation vector
-        float fov = (float)Math.PI/8; //TODO: Tweak
-        float ox = orientationWithLength.x;
-        float oy = orientationWithLength.y;
-
-        //TODO: evtl vereinfachen (math.pi*2)
-        //Ray Left
-        Vector2f rayLeftOrientation = new Vector2f((float)(Math.cos(fov) * ox - Math.sin(fov) * oy), (float)(Math.sin(fov) * ox + Math.cos(fov) * oy));
-        Vector2f.add(currentPos, rayLeftOrientation, rayLeft);
-
-        //Ray Right
-        Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-fov) * ox - Math.sin(2*Math.PI-fov) * oy), (float)(Math.sin(2*Math.PI-fov) * ox + Math.cos(2*Math.PI-fov) * oy));
-        Vector2f.add(currentPos, rayRightOrientation, rayRight);
-
-        for (int i = 0; i < obstacles.length; i++) {
-            if (obstacles[i].contains(rayLeft.x, rayLeft.y))
-                requiredAngularVelocity = -info.getMaxAbsoluteAngularVelocity();
-            else if (obstacles[i].contains(rayRight.x, rayRight.y))
-                requiredAngularVelocity = info.getMaxAbsoluteAngularVelocity();
-        }
         float angularVelocity = (requiredAngularVelocity - info.getAngularVelocity()) / 1;
 
         return new DriverAction(acceleration(arrive(3f,50f)), angularVelocity);
@@ -135,6 +90,48 @@ public class MySuperAI extends AI{
         return speed - info.getVelocity().length() / 1;
     }
 
+    public void align() {
+        float angleBetweenPosAndDest = Vector2f.angle(orientation, destVector);
+        float tolerance = 0.000001f;
+        float dot = orientation.x * -destVector.y + orientation.y * destVector.x;
+        if (dot > 0) angleBetweenPosAndDest = -angleBetweenPosAndDest;
+        if (Math.abs(angleBetweenPosAndDest) < Math.abs(info.getAngularVelocity())/2) {
+            requiredAngularVelocity = (angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / 2*Math.abs(info.getAngularVelocity())); //TODO: Tweak
+        } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
+    }
 
+    public void avoidObstacle(float breakRad) {
+        Track track = info.getTrack();
+        Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
+        float rayCastLength = info.getVelocity().length();
+        if (distanceToDest >= 4*breakRad) {
+            rayCastLength = 4 * info.getVelocity().length();
+        }
+        Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
 
+        //Single Ray (middle)
+        Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
+
+        //turn orientation vector
+        float fov = (float)Math.PI/8; //TODO: Tweak
+        float ox = orientationWithLength.x;
+        float oy = orientationWithLength.y;
+
+        //TODO: evtl vereinfachen (math.pi*2)
+        //Ray Left
+        Vector2f rayLeftOrientation = new Vector2f((float)(Math.cos(fov) * ox - Math.sin(fov) * oy), (float)(Math.sin(fov) * ox + Math.cos(fov) * oy));
+        Vector2f.add(currentPos, rayLeftOrientation, rayLeft);
+
+        //Ray Right
+        Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-fov) * ox - Math.sin(2*Math.PI-fov) * oy), (float)(Math.sin(2*Math.PI-fov) * ox + Math.cos(2*Math.PI-fov) * oy));
+        Vector2f.add(currentPos, rayRightOrientation, rayRight);
+
+        for (int i = 0; i < obstacles.length; i++) {
+            if (obstacles[i].contains(rayLeft.x, rayLeft.y))
+                requiredAngularVelocity = -info.getMaxAbsoluteAngularVelocity();
+            else if (obstacles[i].contains(rayRight.x, rayRight.y))
+                requiredAngularVelocity = info.getMaxAbsoluteAngularVelocity();
+        }
+    }
 }
+
