@@ -25,7 +25,7 @@ public class MySuperAI extends AI{
 
     @Override
     public String getName() {
-        return "JAKOB";
+        return "Jakobi";
     }
 
     @Override
