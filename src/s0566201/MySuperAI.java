@@ -126,7 +126,8 @@ public class MySuperAI extends AI{
         Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-fov) * ox - Math.sin(2*Math.PI-fov) * oy), (float)(Math.sin(2*Math.PI-fov) * ox + Math.cos(2*Math.PI-fov) * oy));
         Vector2f.add(currentPos, rayRightOrientation, rayRight);
 
-        for (int i = 0; i < obstacles.length; i++) {
+        for (int i = 2; i < obstacles.length; i++) {
+            //obstacle 0,1 are outer walls
             if (obstacles[i].contains(rayLeft.x, rayLeft.y))
                 requiredAngularVelocity = -info.getMaxAbsoluteAngularVelocity();
             else if (obstacles[i].contains(rayRight.x, rayRight.y))
