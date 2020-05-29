@@ -237,7 +237,9 @@ public class MySuperAI extends AI{
                 // if crossproduct positive: outside angle > 180
                 // if crossproduct negative: outside angle < 180
 
-                if (crossProduct > 0 && xPoint2 != 0 && yPoint2 != 0 && xPoint2 != track.getHeight() && xPoint3 != 0 && yPoint3 != 0 && yPoint3 != track.getHeight() && xPoint1 != track.getWidth()) {
+                if (crossProduct > 0 && xPoint1 != 0 && yPoint1 != 0 && xPoint1 != track.getWidth() && yPoint1 != track.getHeight() &&
+                                        xPoint2 != 0 && yPoint2 != 0 && xPoint2 != track.getWidth() && yPoint2 != track.getHeight() &&
+                                        xPoint3 != 0 && yPoint3 != 0 && xPoint3 != track.getWidth() && yPoint3 != track.getHeight()) {
                     Vector2f v = new Vector2f(xPoint2, yPoint2);
                     Node n = new Node(v);
                     reflexCorners.add(n);
