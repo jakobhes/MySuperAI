@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MySuperAI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MySuperAI_jar</output-path>
+    <root id="archive" name="MySuperAI.jar">
+      <element id="module-output" name="MySuperAI" />
+      <element id="module-source" name="MySuperAI" />
+      <element id="library" level="project" name="ai-libs" />
+    </root>
+  </artifact>
+</component>

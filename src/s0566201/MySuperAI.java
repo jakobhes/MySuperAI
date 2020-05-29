@@ -8,6 +8,7 @@ import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
 
@@ -22,10 +23,13 @@ public class MySuperAI extends AI{
     Vector2f destVector = new Vector2f();
     float distanceToDest;
     float requiredAngularVelocity;
+    ArrayList<Node> reflexCorners = new ArrayList<>();
+
 
     public MySuperAI (Info info) {
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
+        addReflexCorners();
 //        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
     }
 
@@ -66,6 +70,12 @@ public class MySuperAI extends AI{
         glColor3f(1, 0, 0);
         glVertex2f(info.getX(), info.getY());
         glVertex2d(info.getCurrentCheckpoint().getX(), info.getCurrentCheckpoint().getY());
+        glEnd();
+        glBegin(GL_POINTS);
+        glColor3f(0,1,0);
+        for (int i = 0; i < reflexCorners.size(); i++) {
+            glVertex2d(reflexCorners.get(i).x, reflexCorners.get(i).y);
+        }
         glEnd();
 //        glBegin(GL_LINES);
 //        glColor3f(0,0,1);
@@ -136,61 +146,104 @@ public class MySuperAI extends AI{
         }
     }
 
-    public List<Node> aStarSearch(Vector2f start, Vector2f goal)
-    {
+//    public List<Node> aStarSearch(Vector2f start, Vector2f goal)
+//    {
+//
+//        Node startNode = new Node (start);
+//        Node endNode = new Node (goal);
+//
+//        // setup for A*
+//        HashMap<Node,Node> parentMap = new HashMap<Node,Node>();
+//        HashSet<Node> visited = new HashSet<Node>();
+//        Map<Node, Double> distances = initializeAllToInfinity();
+//
+//        Queue<Node> priorityQueue = initQueue();
+//
+//        //  enque StartNode, with distance 0
+//        startNode.setDistanceToStart(new Double(0));
+//        distances.put(startNode, new Double(0));
+//        priorityQueue.add(startNode);
+//        Node current = null;
+//
+//        while (!priorityQueue.isEmpty()) {
+//            current = priorityQueue.remove();
+//
+//            if (!visited.contains(current) ){
+//                visited.add(current);
+//                // if last element in PQ reached
+//                if (current.equals(endNode)) return reconstructPath(parentMap, startNode, endNode, 0);
+//
+//                Set<Node> neighbors = getNeighbors(current);
+//                for (Node neighbor : neighbors) {
+//                    if (!visited.contains(neighbor) ){
+//
+//                        // calculate predicted distance to the end node
+//                        double predictedDistance = neighbor.getLocation().distance(endNode.getLocation());
+//
+//                        // 1. calculate distance to neighbor. 2. calculate dist from start node
+//                        double neighborDistance = current.calculateDistance(neighbor);
+//                        double totalDistance = current.getDistanceToStart() + neighborDistance + predictedDistance;
+//
+//                        // check if distance smaller
+//                        if(totalDistance < distances.get(neighbor) ){
+//                            // update n's distance
+//                            distances.put(neighbor, totalDistance);
+//                            // used for PriorityQueue
+//                            neighbor.setDistanceToStart(totalDistance);
+//                            neighbor.setPredictedDistance(predictedDistance);
+//                            // set parent
+//                            parentMap.put(neighbor, current);
+//                            // enqueue
+//                            priorityQueue.add(neighbor);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return null;
+//    }
 
-        Node startNode = new Node (start);
-        Node endNode = new Node (goal);
+    public void addReflexCorners() {
+        int xPoint2, xPoint3, yPoint2, yPoint3;
+        Track track = info.getTrack();
+        Polygon[] obstacles = track.getObstacles();
+        for (int i = 0; i < obstacles.length; i++) {
+            Polygon obs = obstacles[i];
+            for (int j = 0; j < obs.npoints; j++) {
+                int xPoint1 = obs.xpoints[j];
+                int yPoint1 = obs.ypoints[j];
+                if (j == obs.npoints - 1) {
+                    xPoint2 = obs.xpoints[0];
+                    yPoint2 = obs.ypoints[0];
+                    xPoint3 = obs.xpoints[1];
+                    yPoint3 = obs.ypoints[1];
+                } else if (j == obs.npoints - 2) {
+                    xPoint2 = obs.xpoints[j+1];
+                    yPoint2 = obs.ypoints[j+1];
+                    xPoint3 = obs.xpoints[0];
+                    yPoint3 = obs.ypoints[0];
+                }
+                else {
+                    xPoint2 = obs.xpoints[j+1];
+                    yPoint2 = obs.ypoints[j+1];
+                    xPoint3 = obs.xpoints[j+2];
+                    yPoint3 = obs.ypoints[j+2];
+                }
 
-        // setup for A*
-        HashMap<Node,Node> parentMap = new HashMap<Node,Node>();
-        HashSet<Node> visited = new HashSet<Node>();
-        Map<Node, Double> distances = initializeAllToInfinity();
+                Vector2f v1 = new Vector2f(xPoint2-xPoint1, yPoint2-yPoint1);
+                Vector2f v2 = new Vector2f(xPoint3-xPoint2, yPoint3-yPoint2);
 
-        Queue<Node> priorityQueue = initQueue();
+                float crossProduct = (v1.x*v2.y)-(v2.x*v1.y);
+                // if crossproduct positive: outside angle > 180
+                // if crossproduct negative: outside angle < 180
 
-        //  enque StartNode, with distance 0
-        startNode.setDistanceToStart(new Double(0));
-        distances.put(startNode, new Double(0));
-        priorityQueue.add(startNode);
-        Node current = null;
-
-        while (!priorityQueue.isEmpty()) {
-            current = priorityQueue.remove();
-
-            if (!visited.contains(current) ){
-                visited.add(current);
-                // if last element in PQ reached
-                if (current.equals(endNode)) return reconstructPath(parentMap, startNode, endNode, 0);
-
-                Set<Node> neighbors = getNeighbors(current);
-                for (Node neighbor : neighbors) {
-                    if (!visited.contains(neighbor) ){
-
-                        // calculate predicted distance to the end node
-                        double predictedDistance = neighbor.getLocation().distance(endNode.getLocation());
-
-                        // 1. calculate distance to neighbor. 2. calculate dist from start node
-                        double neighborDistance = current.calculateDistance(neighbor);
-                        double totalDistance = current.getDistanceToStart() + neighborDistance + predictedDistance;
-
-                        // check if distance smaller
-                        if(totalDistance < distances.get(neighbor) ){
-                            // update n's distance
-                            distances.put(neighbor, totalDistance);
-                            // used for PriorityQueue
-                            neighbor.setDistanceToStart(totalDistance);
-                            neighbor.setPredictedDistance(predictedDistance);
-                            // set parent
-                            parentMap.put(neighbor, current);
-                            // enqueue
-                            priorityQueue.add(neighbor);
-                        }
-                    }
+                if (crossProduct > 0 && xPoint2 != 0 && yPoint2 != 0 && xPoint2 != track.getHeight() && xPoint3 != 0 && yPoint3 != 0 && yPoint3 != track.getHeight() && xPoint1 != track.getWidth()) {
+                    Vector2f v = new Vector2f(xPoint2, yPoint2);
+                    Node n = new Node(v);
+                    reflexCorners.add(n);
                 }
             }
         }
-        return null;
     }
 
 }
