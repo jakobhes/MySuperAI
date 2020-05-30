@@ -203,44 +203,65 @@ public class MySuperAI extends AI{
 //        return null;
 //    }
 
+    // adds reflex corners and moves them away from obstacle
     public void addReflexCorners() {
-        int xPoint2, xPoint3, yPoint2, yPoint3;
+        float x2, x3, y2, y3;
+        int moveDistance = 20;
         Track track = info.getTrack();
         Polygon[] obstacles = track.getObstacles();
-        for (int i = 0; i < obstacles.length; i++) {
-            Polygon obs = obstacles[i];
+        for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
-                int xPoint1 = obs.xpoints[j];
-                int yPoint1 = obs.ypoints[j];
+                float x1 = obs.xpoints[j];
+                float y1 = obs.ypoints[j];
                 if (j == obs.npoints - 1) {
-                    xPoint2 = obs.xpoints[0];
-                    yPoint2 = obs.ypoints[0];
-                    xPoint3 = obs.xpoints[1];
-                    yPoint3 = obs.ypoints[1];
+                    x2 = obs.xpoints[0];
+                    y2 = obs.ypoints[0];
+                    x3 = obs.xpoints[1];
+                    y3 = obs.ypoints[1];
                 } else if (j == obs.npoints - 2) {
-                    xPoint2 = obs.xpoints[j+1];
-                    yPoint2 = obs.ypoints[j+1];
-                    xPoint3 = obs.xpoints[0];
-                    yPoint3 = obs.ypoints[0];
-                }
-                else {
-                    xPoint2 = obs.xpoints[j+1];
-                    yPoint2 = obs.ypoints[j+1];
-                    xPoint3 = obs.xpoints[j+2];
-                    yPoint3 = obs.ypoints[j+2];
+                    x2 = obs.xpoints[j + 1];
+                    y2 = obs.ypoints[j + 1];
+                    x3 = obs.xpoints[0];
+                    y3 = obs.ypoints[0];
+                } else {
+                    x2 = obs.xpoints[j + 1];
+                    y2 = obs.ypoints[j + 1];
+                    x3 = obs.xpoints[j + 2];
+                    y3 = obs.ypoints[j + 2];
                 }
 
-                Vector2f v1 = new Vector2f(xPoint2-xPoint1, yPoint2-yPoint1);
-                Vector2f v2 = new Vector2f(xPoint3-xPoint2, yPoint3-yPoint2);
+                Vector2f v1 = new Vector2f(x2 - x1, y2 - y1);
+                Vector2f v2 = new Vector2f(x3 - x2, y3 - y2);
 
-                float crossProduct = (v1.x*v2.y)-(v2.x*v1.y);
+                float crossProduct = (v1.x * v2.y) - (v2.x * v1.y);
                 // if crossproduct positive: outside angle > 180
                 // if crossproduct negative: outside angle < 180
 
-                if (crossProduct > 0 && xPoint1 != 0 && yPoint1 != 0 && xPoint1 != track.getWidth() && yPoint1 != track.getHeight() &&
-                                        xPoint2 != 0 && yPoint2 != 0 && xPoint2 != track.getWidth() && yPoint2 != track.getHeight() &&
-                                        xPoint3 != 0 && yPoint3 != 0 && xPoint3 != track.getWidth() && yPoint3 != track.getHeight()) {
-                    Vector2f v = new Vector2f(xPoint2, yPoint2);
+                if (crossProduct > 0 && x1 != 0 && y1 != 0 && x1 != track.getWidth() && y1 != track.getHeight() &&
+                        x2 != 0 && y2 != 0 && x2 != track.getWidth() && y2 != track.getHeight() &&
+                        x3 != 0 && y3 != 0 && x3 != track.getWidth() && y3 != track.getHeight()) {
+                    if (x1 < x2 && x3 > x1 && y1 > y2 && y3 > y2) {
+                        y2 -= moveDistance;
+                    } else if (x1 <= x2 && x3 >= x1 && y1 >= y2 && y3 <= y2 || x1 > x2 && x3 > x2 && y1 > y2 && y3 > y2) {
+                        x2 -= moveDistance;
+                        y2 -= moveDistance;
+                    } else if (x1 <= x2 && x3 <= x2 && y1 >= y2 && y3 >= y2 || x1 < x2 && x3 > x2 && y1 < y2 && y3 > y2) {
+                        x2 += moveDistance;
+                        y2 -= moveDistance;
+                    } else if (x1 >= x2 && x3 <= x2 && y1 >= y2 && y3 <= y2 || x1 >= x2 && x3 >= x2 && y1 <= y2 && y3 <= y2) {
+                        x2 -= moveDistance;
+                        y2 += moveDistance;
+                    } else if (x1 > x2 && x3 > x2 && y1 > y2 && y3 < y2) {
+                        x2 -= moveDistance;
+                    } else if (x1 <= x2 && x3 < x2 && y1 < y2 && y3 > y2) {
+                        x2 += moveDistance;
+                    } else if (x1 <= x2 && x3 <= x2 && y1 <= y2 && y3 <= y2 || x1 > x2 && x3 < x2 && y1 < y2 && y3 >= y2) {
+                        x2 += moveDistance;
+                        y2 += moveDistance;
+                    } else if (x1 > x2 && x3 < x2 && y1 < y2 && y3 < y2) {
+                        y2 += moveDistance;
+                    }
+                    Vector2f v = new Vector2f(x2, y2);
                     Node n = new Node(v);
                     reflexCorners.add(n);
                 }
