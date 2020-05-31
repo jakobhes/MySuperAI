@@ -73,8 +73,9 @@ public class MySuperAI extends AI{
         glEnd();
         glBegin(GL_POINTS);
         glColor3f(0,1,0);
-        for (int i = 0; i < reflexCorners.size(); i++) {
-            glVertex2d(reflexCorners.get(i).x, reflexCorners.get(i).y);
+        for (Node reflexCorner : reflexCorners) {
+            glPointSize(0.1f);
+            glVertex2d(reflexCorner.x, reflexCorner.y);
         }
         glEnd();
 //        glBegin(GL_LINES);
@@ -138,10 +139,10 @@ public class MySuperAI extends AI{
         Vector2f rayRightOrientation = new Vector2f((float)(Math.cos(2*Math.PI-fov) * ox - Math.sin(2*Math.PI-fov) * oy), (float)(Math.sin(2*Math.PI-fov) * ox + Math.cos(2*Math.PI-fov) * oy));
         Vector2f.add(currentPos, rayRightOrientation, rayRight);
 
-        for (int i = 0; i < obstacles.length; i++) {
-            if (obstacles[i].contains(rayLeft.x, rayLeft.y))
+        for (Polygon obstacle : obstacles) {
+            if (obstacle.contains(rayLeft.x, rayLeft.y))
                 requiredAngularVelocity = -info.getMaxAbsoluteAngularVelocity();
-            else if (obstacles[i].contains(rayRight.x, rayRight.y))
+            else if (obstacle.contains(rayRight.x, rayRight.y))
                 requiredAngularVelocity = info.getMaxAbsoluteAngularVelocity();
         }
     }
@@ -206,7 +207,7 @@ public class MySuperAI extends AI{
     // adds reflex corners and moves them away from obstacle
     public void addReflexCorners() {
         float x2, x3, y2, y3;
-        int moveDistance = 20;
+        int moveDistance = 25;
         Track track = info.getTrack();
         Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
@@ -240,27 +241,17 @@ public class MySuperAI extends AI{
                 if (crossProduct > 0 && x1 != 0 && y1 != 0 && x1 != track.getWidth() && y1 != track.getHeight() &&
                         x2 != 0 && y2 != 0 && x2 != track.getWidth() && y2 != track.getHeight() &&
                         x3 != 0 && y3 != 0 && x3 != track.getWidth() && y3 != track.getHeight()) {
-                    if (x1 < x2 && x3 > x1 && y1 > y2 && y3 > y2) {
-                        y2 -= moveDistance;
-                    } else if (x1 <= x2 && x3 >= x1 && y1 >= y2 && y3 <= y2 || x1 > x2 && x3 > x2 && y1 > y2 && y3 > y2) {
-                        x2 -= moveDistance;
-                        y2 -= moveDistance;
-                    } else if (x1 <= x2 && x3 <= x2 && y1 >= y2 && y3 >= y2 || x1 < x2 && x3 > x2 && y1 < y2 && y3 > y2) {
-                        x2 += moveDistance;
-                        y2 -= moveDistance;
-                    } else if (x1 >= x2 && x3 <= x2 && y1 >= y2 && y3 <= y2 || x1 >= x2 && x3 >= x2 && y1 <= y2 && y3 <= y2) {
-                        x2 -= moveDistance;
-                        y2 += moveDistance;
-                    } else if (x1 > x2 && x3 > x2 && y1 > y2 && y3 < y2) {
-                        x2 -= moveDistance;
-                    } else if (x1 <= x2 && x3 < x2 && y1 < y2 && y3 > y2) {
-                        x2 += moveDistance;
-                    } else if (x1 <= x2 && x3 <= x2 && y1 <= y2 && y3 <= y2 || x1 > x2 && x3 < x2 && y1 < y2 && y3 >= y2) {
-                        x2 += moveDistance;
-                        y2 += moveDistance;
-                    } else if (x1 > x2 && x3 < x2 && y1 < y2 && y3 < y2) {
-                        y2 += moveDistance;
-                    }
+                    Vector2f v3 = new Vector2f(x1-x2, y1-y2);
+                    double angle = (2*Math.PI - Vector2f.angle(v3,v2))/2;
+                    Vector2f v4 = new Vector2f(x2, y2);
+                    v3.normalise(v3);
+                    v3.scale(moveDistance);
+                    Vector2f.add(v4, v3, v3);
+                    System.out.println(angle);
+                    double rotX = Math.cos(angle)*(v3.x-x2)-Math.sin(angle)*(v3.y-y2)+x2;
+                    double rotY = Math.sin(angle)*(v3.x-x2)+Math.cos(angle)*(v3.y-y2)+y2;
+                    x2 = (float)rotX;
+                    y2 = (float)rotY;
                     Vector2f v = new Vector2f(x2, y2);
                     Node n = new Node(v);
                     reflexCorners.add(n);
