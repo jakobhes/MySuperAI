@@ -7,7 +7,10 @@ import lenz.htw.ai4g.ai.DriverAction;
 import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
+
+import javax.sound.sampled.Line;
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.util.*;
 
 public class MySuperAI extends AI{
@@ -253,7 +256,6 @@ public class MySuperAI extends AI{
                     v3.normalise(v3);
                     v3.scale(moveDistance);
                     Vector2f.add(v4, v3, v3);
-                    System.out.println(angle);
                     double rotX = Math.cos(angle)*(v3.x-x2)-Math.sin(angle)*(v3.y-y2)+x2;
                     double rotY = Math.sin(angle)*(v3.x-x2)+Math.cos(angle)*(v3.y-y2)+y2;
                     x2 = (float)rotX;
@@ -269,7 +271,8 @@ public class MySuperAI extends AI{
     public void createEdges () {
         for (int i = 0; i < reflexCorners.size(); i++) {
             for (int j = 1; j < reflexCorners.size(); j++) {
-                if (!intersects()) {
+                Line2D edgeToCheck = new Line2D.Float(reflexCorners.get(i).x, reflexCorners.get(i).y, reflexCorners.get(j).x, reflexCorners.get(j).y);
+                if (!intersects(edgeToCheck)) {
                     Edge e = new Edge(reflexCorners.get(i), reflexCorners.get(j));
                     edges.add(e);
                 }
@@ -277,10 +280,28 @@ public class MySuperAI extends AI{
         }
     }
 
-    //TODO: implement method to check if edge intersects obstacle
-    public boolean intersects (){
+    public boolean intersects (Line2D edgeToCheck){
+        float x1, x2, y1, y2;
+        Track track = info.getTrack();
+        Polygon[] obstacles = track.getObstacles();
+        for (Polygon obs : obstacles) {
+            for (int j = 0; j < obs.npoints; j++) {
+                x1 = obs.xpoints[j];
+                y1 = obs.ypoints[j];
+                if (j == obs.npoints - 1) {
+                    x2 = obs.xpoints[0];
+                    y2 = obs.ypoints[0];
+                } else {
+                    x2 = obs.xpoints[j+1];
+                    y2 = obs.ypoints[j+1];
+                }
+                Line2D l = new Line2D.Float(x1, y1, x2, y2);
+                if (l.intersectsLine(edgeToCheck)) {
+                    return  true;
+                }
+            }
+        }
         return  false;
     }
-
 }
 
