@@ -8,9 +8,7 @@ import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.util.*;
-import java.util.List;
 
 public class MySuperAI extends AI{
 
@@ -24,12 +22,14 @@ public class MySuperAI extends AI{
     float distanceToDest;
     float requiredAngularVelocity;
     ArrayList<Node> reflexCorners = new ArrayList<>();
+    ArrayList<Edge> edges = new ArrayList<>();
 
 
     public MySuperAI (Info info) {
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
         addReflexCorners();
+        createEdges();
 //        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
     }
 
@@ -76,6 +76,12 @@ public class MySuperAI extends AI{
         for (Node reflexCorner : reflexCorners) {
             glPointSize(0.1f);
             glVertex2d(reflexCorner.x, reflexCorner.y);
+        }
+        glEnd();
+        glBegin(GL_LINES);
+        for (Edge edge : edges) {
+            glVertex2d(edge.a.x, edge.a.y);
+            glVertex2d(edge.b.x, edge.b.y);
         }
         glEnd();
 //        glBegin(GL_LINES);
@@ -207,7 +213,7 @@ public class MySuperAI extends AI{
     // adds reflex corners and moves them away from obstacle
     public void addReflexCorners() {
         float x2, x3, y2, y3;
-        int moveDistance = 25;
+        int moveDistance = 10;
         Track track = info.getTrack();
         Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
@@ -258,6 +264,22 @@ public class MySuperAI extends AI{
                 }
             }
         }
+    }
+
+    public void createEdges () {
+        for (int i = 0; i < reflexCorners.size(); i++) {
+            for (int j = 1; j < reflexCorners.size(); j++) {
+                if (!intersects()) {
+                    Edge e = new Edge(reflexCorners.get(i), reflexCorners.get(j));
+                    edges.add(e);
+                }
+            }
+        }
+    }
+
+    //TODO: implement method to check if edge intersects obstacle
+    public boolean intersects (){
+        return  false;
     }
 
 }
