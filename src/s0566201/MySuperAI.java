@@ -7,8 +7,6 @@ import lenz.htw.ai4g.ai.DriverAction;
 import lenz.htw.ai4g.ai.Info;
 import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
-
-import javax.sound.sampled.Line;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.*;
@@ -216,7 +214,7 @@ public class MySuperAI extends AI{
     // adds reflex corners and moves them away from obstacle
     public void addReflexCorners() {
         float x2, x3, y2, y3;
-        int moveDistance = 10;
+        int moveDistance = 20;
         Track track = info.getTrack();
         Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
@@ -297,6 +295,9 @@ public class MySuperAI extends AI{
                 }
                 Line2D l = new Line2D.Float(x1, y1, x2, y2);
                 if (l.intersectsLine(edgeToCheck)) {
+                    return true;
+
+                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value
                     return  true;
                 }
             }
