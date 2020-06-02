@@ -13,6 +13,7 @@ import java.util.*;
 
 public class MySuperAI extends AI{
 
+    Graph g = new Graph();
     Vector2f rayCastMiddle = new Vector2f();
     Vector2f rayLeft = new Vector2f();
     Vector2f rayRight = new Vector2f();
@@ -22,15 +23,16 @@ public class MySuperAI extends AI{
     Vector2f destVector = new Vector2f();
     float distanceToDest;
     float requiredAngularVelocity;
-    ArrayList<Node> reflexCorners = new ArrayList<>();
-    ArrayList<Edge> edges = new ArrayList<>();
+
 
 
     public MySuperAI (Info info) {
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
-        addReflexCorners();
-        createEdges();
+        g.draw(info.getTrack());
+
+        g.addNode(info.getTrack(), new Vector2f(info.getX(), info.getY()));
+//        g.addNode(info.getTrack(), currentCheckpoint);
 //        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
     }
 
@@ -44,8 +46,9 @@ public class MySuperAI extends AI{
 
         Track track = info.getTrack();
 
-        //Vectors init
         currentCheckpoint = new Vector2f((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
+
+        //Vectors init
         orientation = new Vector2f((float)(Math.cos(info.getOrientation())), (float) (Math.sin(info.getOrientation())));
         currentPos = new Vector2f(info.getX(), info.getY());
         Vector2f.sub(currentCheckpoint, currentPos, destVector);
@@ -72,19 +75,7 @@ public class MySuperAI extends AI{
         glVertex2f(info.getX(), info.getY());
         glVertex2d(info.getCurrentCheckpoint().getX(), info.getCurrentCheckpoint().getY());
         glEnd();
-        glBegin(GL_POINTS);
-        glColor3f(0,1,0);
-        for (Node reflexCorner : reflexCorners) {
-            glPointSize(0.1f);
-            glVertex2d(reflexCorner.x, reflexCorner.y);
-        }
-        glEnd();
-        glBegin(GL_LINES);
-        for (Edge edge : edges) {
-            glVertex2d(edge.a.x, edge.a.y);
-            glVertex2d(edge.b.x, edge.b.y);
-        }
-        glEnd();
+        g.visualize();
 //        glBegin(GL_LINES);
 //        glColor3f(0,0,1);
 //        glVertex2f(info.getX(), info.getY());
@@ -154,155 +145,7 @@ public class MySuperAI extends AI{
         }
     }
 
-//    public List<Node> aStarSearch(Vector2f start, Vector2f goal)
-//    {
-//
-//        Node startNode = new Node (start);
-//        Node endNode = new Node (goal);
-//
-//        // setup for A*
-//        HashMap<Node,Node> parentMap = new HashMap<Node,Node>();
-//        HashSet<Node> visited = new HashSet<Node>();
-//        Map<Node, Double> distances = initializeAllToInfinity();
-//
-//        Queue<Node> priorityQueue = initQueue();
-//
-//        //  enque StartNode, with distance 0
-//        startNode.setDistanceToStart(new Double(0));
-//        distances.put(startNode, new Double(0));
-//        priorityQueue.add(startNode);
-//        Node current = null;
-//
-//        while (!priorityQueue.isEmpty()) {
-//            current = priorityQueue.remove();
-//
-//            if (!visited.contains(current) ){
-//                visited.add(current);
-//                // if last element in PQ reached
-//                if (current.equals(endNode)) return reconstructPath(parentMap, startNode, endNode, 0);
-//
-//                Set<Node> neighbors = getNeighbors(current);
-//                for (Node neighbor : neighbors) {
-//                    if (!visited.contains(neighbor) ){
-//
-//                        // calculate predicted distance to the end node
-//                        double predictedDistance = neighbor.getLocation().distance(endNode.getLocation());
-//
-//                        // 1. calculate distance to neighbor. 2. calculate dist from start node
-//                        double neighborDistance = current.calculateDistance(neighbor);
-//                        double totalDistance = current.getDistanceToStart() + neighborDistance + predictedDistance;
-//
-//                        // check if distance smaller
-//                        if(totalDistance < distances.get(neighbor) ){
-//                            // update n's distance
-//                            distances.put(neighbor, totalDistance);
-//                            // used for PriorityQueue
-//                            neighbor.setDistanceToStart(totalDistance);
-//                            neighbor.setPredictedDistance(predictedDistance);
-//                            // set parent
-//                            parentMap.put(neighbor, current);
-//                            // enqueue
-//                            priorityQueue.add(neighbor);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return null;
-//    }
 
-    // adds reflex corners and moves them away from obstacle
-    public void addReflexCorners() {
-        float x2, x3, y2, y3;
-        int moveDistance = 20;
-        Track track = info.getTrack();
-        Polygon[] obstacles = track.getObstacles();
-        for (Polygon obs : obstacles) {
-            for (int j = 0; j < obs.npoints; j++) {
-                float x1 = obs.xpoints[j];
-                float y1 = obs.ypoints[j];
-                if (j == obs.npoints - 1) {
-                    x2 = obs.xpoints[0];
-                    y2 = obs.ypoints[0];
-                    x3 = obs.xpoints[1];
-                    y3 = obs.ypoints[1];
-                } else if (j == obs.npoints - 2) {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[0];
-                    y3 = obs.ypoints[0];
-                } else {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[j + 2];
-                    y3 = obs.ypoints[j + 2];
-                }
 
-                Vector2f v1 = new Vector2f(x2 - x1, y2 - y1);
-                Vector2f v2 = new Vector2f(x3 - x2, y3 - y2);
-
-                float crossProduct = (v1.x * v2.y) - (v2.x * v1.y);
-                // if crossproduct positive: outside angle > 180
-                // if crossproduct negative: outside angle < 180
-
-                if (crossProduct > 0 && x1 != 0 && y1 != 0 && x1 != track.getWidth() && y1 != track.getHeight() &&
-                        x2 != 0 && y2 != 0 && x2 != track.getWidth() && y2 != track.getHeight() &&
-                        x3 != 0 && y3 != 0 && x3 != track.getWidth() && y3 != track.getHeight()) {
-                    Vector2f v3 = new Vector2f(x1-x2, y1-y2);
-                    double angle = (2*Math.PI - Vector2f.angle(v3,v2))/2;
-                    Vector2f v4 = new Vector2f(x2, y2);
-                    v3.normalise(v3);
-                    v3.scale(moveDistance);
-                    Vector2f.add(v4, v3, v3);
-                    double rotX = Math.cos(angle)*(v3.x-x2)-Math.sin(angle)*(v3.y-y2)+x2;
-                    double rotY = Math.sin(angle)*(v3.x-x2)+Math.cos(angle)*(v3.y-y2)+y2;
-                    x2 = (float)rotX;
-                    y2 = (float)rotY;
-                    Vector2f v = new Vector2f(x2, y2);
-                    Node n = new Node(v);
-                    reflexCorners.add(n);
-                }
-            }
-        }
-    }
-
-    public void createEdges () {
-        for (int i = 0; i < reflexCorners.size(); i++) {
-            for (int j = 1; j < reflexCorners.size(); j++) {
-                Line2D edgeToCheck = new Line2D.Float(reflexCorners.get(i).x, reflexCorners.get(i).y, reflexCorners.get(j).x, reflexCorners.get(j).y);
-                if (!intersects(edgeToCheck)) {
-                    Edge e = new Edge(reflexCorners.get(i), reflexCorners.get(j));
-                    edges.add(e);
-                }
-            }
-        }
-    }
-
-    public boolean intersects (Line2D edgeToCheck){
-        float x1, x2, y1, y2;
-        Track track = info.getTrack();
-        Polygon[] obstacles = track.getObstacles();
-        for (Polygon obs : obstacles) {
-            for (int j = 0; j < obs.npoints; j++) {
-                x1 = obs.xpoints[j];
-                y1 = obs.ypoints[j];
-                if (j == obs.npoints - 1) {
-                    x2 = obs.xpoints[0];
-                    y2 = obs.ypoints[0];
-                } else {
-                    x2 = obs.xpoints[j+1];
-                    y2 = obs.ypoints[j+1];
-                }
-                Line2D l = new Line2D.Float(x1, y1, x2, y2);
-                if (l.intersectsLine(edgeToCheck)) {
-                    return true;
-
-                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value
-                    return  true;
-                }
-            }
-        }
-        return  false;
-    }
 }
 
