@@ -4,7 +4,7 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.util.ArrayList;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -14,13 +14,10 @@ public class Graph {
     ArrayList<Node> nodes = new ArrayList<>();
     ArrayList<Edge> edges = new ArrayList<>();
 
-    public Graph(Polygon[] obstacles) {
 
-    }
+    // public Graph(Polygon[] obstacles) { }
 
-    public Graph() {
-
-    }
+    public Graph() {}
 
     // adds reflex corners and moves them away from obstacle
     public void addReflexCorners(Track track) {
@@ -87,8 +84,14 @@ public class Graph {
             }
         }
     }
-    public void addNode (Track track, Vector2f v) {
-        Node n = new Node (v);
+
+    //internet stuff
+    public void addNode(Node nodeA) {
+        nodes.add(nodeA);
+    }
+
+
+    public void addNode(Track track, Node n) {
         for (int i = 0; i < nodes.size(); i++) {
             Line2D edgeToCheck = new Line2D.Float(nodes.get(i).x, nodes.get(i).y, n.x, n.y);
             if (!intersects(edgeToCheck, track)) {
@@ -145,5 +148,23 @@ public class Graph {
     public void draw (Track track) {
         addReflexCorners(track);
         createEdges(track);
+    }
+
+
+    public float calcDistanceBetween(Node a, Node b) {
+        return (float) (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
+    }
+
+    public ArrayList<Node> findShortesPath(Node start, Node destination, Track track) {
+        start.setCost(0);
+        start.setDistanceToStart(0);
+        start.setDistanceToDestination(calcDistanceBetween(start, destination));
+        addNode(track, start);
+
+        destination.setDistanceToDestination(0);
+        addNode(track, destination);
+
+
+        return null;
     }
 }
