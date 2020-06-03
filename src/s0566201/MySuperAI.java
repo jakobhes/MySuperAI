@@ -109,6 +109,64 @@ public class MySuperAI extends AI{
         } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
     }
 
+
+//    public List<Node> aStarSearch(Vector2f start, Vector2f goal)
+//    {
+//
+//        Node startNode = new Node (start);
+//        Node endNode = new Node (goal);
+//
+//        // setup for A*
+//        HashMap<Node,Node> parentMap = new HashMap<Node,Node>();
+//        HashSet<Node> visited = new HashSet<Node>();
+//        Map<Node, Double> distances = initializeAllToInfinity();
+//
+//        Queue<Node> priorityQueue = initQueue();
+//
+//        //  enque StartNode, with distance 0
+//        startNode.setDistanceToStart(new Double(0));
+//        distances.put(startNode, new Double(0));
+//        priorityQueue.add(startNode);
+//        Node current = null;
+//
+//        while (!priorityQueue.isEmpty()) {
+//            current = priorityQueue.remove();
+//
+//            if (!visited.contains(current) ){
+//                visited.add(current);
+//                // if last element in PQ reached
+//                if (current.equals(endNode)) return reconstructPath(parentMap, startNode, endNode, 0);
+//
+//                Set<Node> neighbors = getNeighbors(current);
+//                for (Node neighbor : neighbors) {
+//                    if (!visited.contains(neighbor) ){
+//
+//                        // calculate predicted distance to the end node
+//                        double predictedDistance = neighbor.getLocation().distance(endNode.getLocation());
+//
+//                        // 1. calculate distance to neighbor. 2. calculate dist from start node
+//                        double neighborDistance = current.calculateDistance(neighbor);
+//                        double totalDistance = current.getDistanceToStart() + neighborDistance + predictedDistance;
+//
+//                        // check if distance smaller
+//                        if(totalDistance < distances.get(neighbor) ){
+//                            // update n's distance
+//                            distances.put(neighbor, totalDistance);
+//                            // used for PriorityQueue
+//                            neighbor.setDistanceToStart(totalDistance);
+//                            neighbor.setPredictedDistance(predictedDistance);
+//                            // set parent
+//                            parentMap.put(neighbor, current);
+//                            // enqueue
+//                            priorityQueue.add(neighbor);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return null;
+//    }
+
     public void avoidObstacle(float breakRad) {
         Track track = info.getTrack();
         Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
