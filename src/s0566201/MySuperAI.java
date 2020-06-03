@@ -30,7 +30,6 @@ public class MySuperAI extends AI{
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
         g.draw(info.getTrack());
-
         g.addNode(info.getTrack(), new Vector2f(info.getX(), info.getY()));
 //        g.addNode(info.getTrack(), currentCheckpoint);
 //        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
@@ -47,7 +46,6 @@ public class MySuperAI extends AI{
         Track track = info.getTrack();
 
         currentCheckpoint = new Vector2f((float)info.getCurrentCheckpoint().getX(), (float)info.getCurrentCheckpoint().getY());
-
         //Vectors init
         orientation = new Vector2f((float)(Math.cos(info.getOrientation())), (float) (Math.sin(info.getOrientation())));
         currentPos = new Vector2f(info.getX(), info.getY());
