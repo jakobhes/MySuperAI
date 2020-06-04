@@ -4,25 +4,25 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
 
 
 public class Graph {
 
-    ArrayList<Node> nodes = new ArrayList<>();
-    ArrayList<Edge> edges = new ArrayList<>();
-
+    public GraphAStar graph;
+    public ArrayList<Vector2f> coords;
 
     // public Graph(Polygon[] obstacles) { }
 
     public Graph() {}
 
     // adds reflex corners and moves them away from obstacle
-    public void addReflexCorners(Track track) {
+    public void checkNodeAndAdd(Track track) {
         float x2, x3, y2, y3;
-        int moveDistance = 20;
+        int offset = 20;
         Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
@@ -59,15 +59,26 @@ public class Graph {
                     double angle = (2*Math.PI - Vector2f.angle(v3,v2))/2;
                     Vector2f v4 = new Vector2f(x2, y2);
                     v3.normalise(v3);
-                    v3.scale(moveDistance);
+                    v3.scale(offset);
                     Vector2f.add(v4, v3, v3);
                     double rotX = Math.cos(angle)*(v3.x-x2)-Math.sin(angle)*(v3.y-y2)+x2;
                     double rotY = Math.sin(angle)*(v3.x-x2)+Math.cos(angle)*(v3.y-y2)+y2;
                     x2 = (float)rotX;
                     y2 = (float)rotY;
                     Vector2f v = new Vector2f(x2, y2);
-                    Node n = new Node(v);
-                    nodes.add(n);
+                    coords.add(v);
+                }
+            }
+        }
+    }
+
+    public Map<String, Double> creatEdges(Track track) {
+        for (int i = 0; i < nodes.size(); i++) {
+            for (int j = 1; j < nodes.size(); j++) {
+                Line2D edgeToCheck = new Line2D.Float(nodes.get(i).x, nodes.get(i).y, nodes.get(j).x, nodes.get(j).y);
+                if (!intersects(edgeToCheck, track)) {
+                    Edge e = new Edge(nodes.get(i), nodes.get(j));
+                    edges.add(e);
                 }
             }
         }
@@ -83,23 +94,6 @@ public class Graph {
                 }
             }
         }
-    }
-
-    //internet stuff
-    public void addNode(Node nodeA) {
-        nodes.add(nodeA);
-    }
-
-
-    public void addNode(Track track, Node n) {
-        for (int i = 0; i < nodes.size(); i++) {
-            Line2D edgeToCheck = new Line2D.Float(nodes.get(i).x, nodes.get(i).y, n.x, n.y);
-            if (!intersects(edgeToCheck, track)) {
-                Edge e = new Edge(nodes.get(i), n);
-                    edges.add(e);
-            }
-        }
-        nodes.add(n);
     }
 
 
@@ -129,6 +123,24 @@ public class Graph {
         return  false;
     }
 
+
+    public void draw(Track track) {
+        checkNodeAndAdd(track);
+        createEdges(track);
+    }
+
+    public float calcDistanceBetween(Node a, Node b) {
+        return (float) (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
+    }
+
+
+    /***
+
+     DEBUG
+
+     */
+
+
     public void visualize () {
         glBegin(GL_POINTS);
         glColor3f(0,1,0);
@@ -145,26 +157,4 @@ public class Graph {
         glEnd();
     }
 
-    public void draw (Track track) {
-        addReflexCorners(track);
-        createEdges(track);
-    }
-
-
-    public float calcDistanceBetween(Node a, Node b) {
-        return (float) (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
-    }
-
-    public ArrayList<Node> findShortesPath(Node start, Node destination, Track track) {
-        start.setCost(0);
-        start.setDistanceToStart(0);
-        start.setDistanceToDestination(calcDistanceBetween(start, destination));
-        addNode(track, start);
-
-        destination.setDistanceToDestination(0);
-        addNode(track, destination);
-
-
-        return null;
-    }
 }

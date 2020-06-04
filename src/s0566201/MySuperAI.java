@@ -30,7 +30,7 @@ public class MySuperAI extends AI{
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
         g.draw(info.getTrack());
-        g.addNode(info.getTrack(), new Vector2f(info.getX(), info.getY()));
+        g.addNode(info.getTrack(), new Node (new Vector2f(info.getX(), info.getY())));
 //        g.addNode(info.getTrack(), currentCheckpoint);
 //        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
     }
