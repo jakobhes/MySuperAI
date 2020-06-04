@@ -10,10 +10,12 @@ import java.util.Map;
 public class Node {
 
     public float x, y;
+    public String id;
 
-    public Node(Vector2f position) {
+    public Node(Vector2f position, String id) {
         this.x = position.x;
         this.y = position.y;
+        this.id = id;
     }
 
     public float getX() {
@@ -24,11 +26,17 @@ public class Node {
         return y;
     }
 
+    public String getId() { return id; }
+
     public void setX(float x) {
         this.x = x;
     }
 
     public void setY(float y) {
         this.y = y;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

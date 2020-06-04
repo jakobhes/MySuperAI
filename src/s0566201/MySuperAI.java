@@ -29,11 +29,14 @@ public class MySuperAI extends AI{
     public MySuperAI (Info info) {
         super(info);
         enlistForTournament(566201, 566843); //fuer Abgabe
-        g.draw(info.getTrack());
 
-        g.addNode(info.getTrack(), new Node (new Vector2f(info.getX(), info.getY())));
-//        g.addNode(info.getTrack(), currentCheckpoint);
-//        enlistForInternalDevelopmentPurposesOnlyAndDoNOTConsiderThisAsPartOfTheHandedInSolution();//zum testen
+        g.createGraph(info.getTrack());
+        AStar<String> aStar = new AStar<>(g.graph);
+
+        for (String path : aStar.astar(g.coords.get(0).getId(), g.coords.get(10).getId())) {
+            System.out.println(path);
+        }
+
     }
 
     @Override
@@ -74,7 +77,7 @@ public class MySuperAI extends AI{
         glVertex2f(info.getX(), info.getY());
         glVertex2d(info.getCurrentCheckpoint().getX(), info.getCurrentCheckpoint().getY());
         glEnd();
-        g.visualize();
+        //g.visualize();
 //        glBegin(GL_LINES);
 //        glColor3f(0,0,1);
 //        glVertex2f(info.getX(), info.getY());

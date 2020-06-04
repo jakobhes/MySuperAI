@@ -4,6 +4,7 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,18 +14,19 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Graph {
 
-    public GraphAStar<Vector2f> graph;
-    public ArrayList<Vector2f> coords;
-    public Map<Vector2f, Map<Vector2f, Double>> heuristic = new HashMap<>();
+    public GraphAStar<String> graph;
+    public ArrayList<Node> coords = new ArrayList<>();
+    public Map<String, Map<String, Double>> heuristic = new HashMap<>();
     // public Graph(Polygon[] obstacles) { }
 
     public Graph() {}
 
     // adds reflex corners and moves them away from obstacle
-    public void checkNodeAndAdd(Track track) {
+    public void checkCoordAndAdd(Track track) {
         float x2, x3, y2, y3;
         int offset = 20;
         Polygon[] obstacles = track.getObstacles();
+        Integer key = 0;
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
                 float x1 = obs.xpoints[j];
@@ -67,31 +69,42 @@ public class Graph {
                     x2 = (float)rotX;
                     y2 = (float)rotY;
                     Vector2f v = new Vector2f(x2, y2);
-                    coords.add(v);
+                    Node n = new Node(v, key.toString());
+                    coords.add(n);
+                    key++;
                 }
             }
         }
     }
 
     public void createGraph(Track track) {
+        checkCoordAndAdd(track);
         createEdges(track);
         graph = new GraphAStar<>(heuristic);
-        for (Vector2f coord : coords) {
-            graph.addNode(coord);
+        for (Node coord : coords) {
+            graph.addNode(coord.getId());
         }
     }
 
     public void createEdges(Track track) {
         for (int i = 0; i < coords.size(); i++) {
-            Map<Vector2f, Double> edgeMap = new HashMap<>();
+            Map<String, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
+                edgeMap.put(coords.get(j).getId(), calcDistanceBetween(coords.get(i), coords.get(j)));
                 Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
+                System.out.println("Node A: " + coords.get(i).getId());
+                System.out.println("Node B: " + coords.get(j).getId());
+                System.out.println("Distance: " + edgeMap.get(coords.get(j).getId()));
+                System.out.println(coords.size());
                 if (!intersects(edgeToCheck, track)) {
-                    edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
-                    graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(i));
+                    try {
+                        graph.addEdge(coords.get(i).getId(), coords.get(j).getId(), edgeMap.get(coords.get(j).getId()));
+                    } catch(Exception e) {
+                        System.out.println("yo");
+                    }
                 }
             }
-            heuristic.put(coords.get(i), edgeMap);
+            heuristic.put(coords.get(i).getId(), edgeMap);
         }
     }
 
@@ -124,12 +137,7 @@ public class Graph {
     }
 
 
-    public void draw(Track track) {
-        checkNodeAndAdd(track);
-        createEdges(track);
-    }
-
-    public double calcDistanceBetween(Vector2f a, Vector2f b) {
+    public double calcDistanceBetween(Node a, Node b) {
         return (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
     }
 
@@ -144,7 +152,7 @@ public class Graph {
     public void visualize () {
         glBegin(GL_POINTS);
         glColor3f(0,1,0);
-        for (Vector2f reflexCorner : coords) {
+        for (Node reflexCorner : coords) {
             glPointSize(0.1f);
             glVertex2d(reflexCorner.x, reflexCorner.y);
         }
