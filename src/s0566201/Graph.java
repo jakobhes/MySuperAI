@@ -5,6 +5,7 @@ import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -12,9 +13,9 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Graph {
 
-    public GraphAStar graph;
+    public GraphAStar<Vector2f> graph;
     public ArrayList<Vector2f> coords;
-
+    public Map<Vector2f, Map<Vector2f, Double>> heuristic = new HashMap<>();
     // public Graph(Polygon[] obstacles) { }
 
     public Graph() {}
@@ -72,29 +73,28 @@ public class Graph {
         }
     }
 
-    public Map<String, Double> creatEdges(Track track) {
-        for (int i = 0; i < nodes.size(); i++) {
-            for (int j = 1; j < nodes.size(); j++) {
-                Line2D edgeToCheck = new Line2D.Float(nodes.get(i).x, nodes.get(i).y, nodes.get(j).x, nodes.get(j).y);
-                if (!intersects(edgeToCheck, track)) {
-                    Edge e = new Edge(nodes.get(i), nodes.get(j));
-                    edges.add(e);
-                }
-            }
+    public void createGraph(Track track) {
+        createEdges(track);
+        graph = new GraphAStar<>(heuristic);
+        for (Vector2f coord : coords) {
+            graph.addNode(coord);
         }
     }
 
-    public void createEdges (Track track) {
-        for (int i = 0; i < nodes.size(); i++) {
-            for (int j = 1; j < nodes.size(); j++) {
-                Line2D edgeToCheck = new Line2D.Float(nodes.get(i).x, nodes.get(i).y, nodes.get(j).x, nodes.get(j).y);
+    public void createEdges(Track track) {
+        for (int i = 0; i < coords.size(); i++) {
+            Map<Vector2f, Double> edgeMap = new HashMap<>();
+            for (int j = 1; j < coords.size(); j++) {
+                Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
                 if (!intersects(edgeToCheck, track)) {
-                    Edge e = new Edge(nodes.get(i), nodes.get(j));
-                    edges.add(e);
+                    edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
+                    graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(i));
                 }
             }
+            heuristic.put(coords.get(i), edgeMap);
         }
     }
+
 
 
     public boolean intersects (Line2D edgeToCheck, Track track){
@@ -129,8 +129,8 @@ public class Graph {
         createEdges(track);
     }
 
-    public float calcDistanceBetween(Node a, Node b) {
-        return (float) (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
+    public double calcDistanceBetween(Vector2f a, Vector2f b) {
+        return (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
     }
 
 
@@ -144,17 +144,17 @@ public class Graph {
     public void visualize () {
         glBegin(GL_POINTS);
         glColor3f(0,1,0);
-        for (Node reflexCorner : nodes) {
+        for (Vector2f reflexCorner : coords) {
             glPointSize(0.1f);
             glVertex2d(reflexCorner.x, reflexCorner.y);
         }
         glEnd();
-        glBegin(GL_LINES);
-        for (Edge edge : edges) {
-            glVertex2d(edge.a.x, edge.a.y);
-            glVertex2d(edge.b.x, edge.b.y);
-        }
-        glEnd();
+//        glBegin(GL_LINES);
+//        for (Edge edge : edges) {
+//            glVertex2d(edge.a.x, edge.a.y);
+//            glVertex2d(edge.b.x, edge.b.y);
+//        }
+//        glEnd();
     }
 
 }
