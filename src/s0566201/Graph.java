@@ -14,9 +14,10 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Graph {
 
-    public GraphAStar<String> graph;
+    public GraphAStar<Node> graph;
     public ArrayList<Node> coords = new ArrayList<>();
-    public Map<String, Map<String, Double>> heuristic = new HashMap<>();
+    public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
+
     // public Graph(Polygon[] obstacles) { }
 
     public Graph() {}
@@ -69,7 +70,7 @@ public class Graph {
                     x2 = (float)rotX;
                     y2 = (float)rotY;
                     Vector2f v = new Vector2f(x2, y2);
-                    Node n = new Node(v, key.toString());
+                    Node n = new Node(v);
                     coords.add(n);
                     key++;
                 }
@@ -78,33 +79,39 @@ public class Graph {
     }
 
     public void createGraph(Track track) {
-        checkCoordAndAdd(track);
-        createEdges(track);
+        addHeuristic();
         graph = new GraphAStar<>(heuristic);
         for (Node coord : coords) {
-            graph.addNode(coord.getId());
+            graph.addNode(coord);
+        }
+        createEdges(track);
+
+    }
+
+    public void addHeuristic() {
+        Map<Node, Double> heurMap = new HashMap<>();
+        for (int i = 0; i < coords.size(); i++) {
+            for (int j = 1; j < coords.size(); j++) {
+                heurMap.put(coords.get(i), calcDistanceBetween(coords.get(i), coords.get(j)));
+            }
+            heuristic.put(coords.get(i), heurMap);
         }
     }
 
     public void createEdges(Track track) {
+
         for (int i = 0; i < coords.size(); i++) {
-            Map<String, Double> edgeMap = new HashMap<>();
+            Map<Node, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
-                edgeMap.put(coords.get(j).getId(), calcDistanceBetween(coords.get(i), coords.get(j)));
+                edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
                 Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
-                System.out.println("Node A: " + coords.get(i).getId());
-                System.out.println("Node B: " + coords.get(j).getId());
-                System.out.println("Distance: " + edgeMap.get(coords.get(j).getId()));
-                System.out.println(coords.size());
-                if (!intersects(edgeToCheck, track)) {
-                    try {
-                        graph.addEdge(coords.get(i).getId(), coords.get(j).getId(), edgeMap.get(coords.get(j).getId()));
-                    } catch(Exception e) {
-                        System.out.println("yo");
-                    }
-                }
+//              System.out.println("Node A: " + coords.get(i).getId());
+//              System.out.println("Node B: " + coords.get(j).getId());
+//              System.out.println("Distance: " + edgeMap.get(coords.get(j).getId()));
+//              System.out.println(coords.size());
+                if (!intersects(edgeToCheck, track))
+                    graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
             }
-            heuristic.put(coords.get(i).getId(), edgeMap);
         }
     }
 
@@ -134,6 +141,10 @@ public class Graph {
             }
         }
         return  false;
+    }
+
+    public void addNode (Node n) {
+
     }
 
 

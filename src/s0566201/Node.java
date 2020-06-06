@@ -2,20 +2,30 @@ package s0566201;
 
 import org.lwjgl.util.vector.Vector2f;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Node {
 
     public float x, y;
-    public String id;
+//    public String id;
 
-    public Node(Vector2f position, String id) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return Float.compare(node.x, x) == 0 &&
+                Float.compare(node.y, y) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+
+    public Node(Vector2f position) {
         this.x = position.x;
         this.y = position.y;
-        this.id = id;
     }
 
     public float getX() {
@@ -26,7 +36,8 @@ public class Node {
         return y;
     }
 
-    public String getId() { return id; }
+//    public String getId() { return id; }
+
 
     public void setX(float x) {
         this.x = x;
@@ -36,7 +47,7 @@ public class Node {
         this.y = y;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+//    public void setId(String id) {
+//        this.id = id;
+//    }
 }
