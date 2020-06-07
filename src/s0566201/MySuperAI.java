@@ -28,7 +28,6 @@ public class MySuperAI extends AI{
     float distToPointOnPath;
     float requiredAngularVelocity;
     ArrayList<Node>shortPathPoints;
-    ArrayList<Node> shortPathPointsPlusMitte;
 
 
 
@@ -61,30 +60,17 @@ public class MySuperAI extends AI{
             aStar = new AStar<>(g.graph);
             shortPathPoints = new ArrayList<>();
             shortPathPoints.addAll(aStar.astar(g.coords.get(g.coords.size() - 2), g.coords.get(g.coords.size() - 1)));
-            shortPathPointsPlusMitte = new ArrayList<>();
-            int j = 0;
-            for (int i = 0; i < shortPathPoints.size()-1; i ++) {
-                Vector2f a = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-                Node xn = new Node(a);
-                Vector2f b = new Vector2f(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
-                Node yn = new Node(b);
-                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
-                Node nn = new Node(n);
-                shortPathPointsPlusMitte.add(j, xn);
-                shortPathPointsPlusMitte.add(j+1, nn);
-                shortPathPointsPlusMitte.add(j+2, yn);
-                j = j + 3;
-            }
+            shortPathPoints = increasePathResolution(shortPathPoints, 4);
         }
         if (wasResetAfterCollision) {
             i = 1;
         }
 
 //        Vector2f currentPointOnPath = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-        Vector2f currentPointOnPath = new Vector2f(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
+        Vector2f currentPointOnPath = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
         distToPointOnPath = (float) (Math.sqrt(Math.pow(currentPointOnPath.x - info.getX(), 2) + Math.pow(currentPointOnPath.y - info.getY(), 2)));
 //        if (distToPointOnPath < 40 && i != shortPathPoints.size()-1) {
-        if (distToPointOnPath < 40 && i != shortPathPointsPlusMitte.size()-1) {
+        if (distToPointOnPath < 40 && i != shortPathPoints.size()-1) {
             i++;
         }
 
@@ -125,9 +111,9 @@ public class MySuperAI extends AI{
 //            if (i < shortPathPoints.size() -1)
 //                glVertex2d(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
 //        }
-        for (int i = 0; i < shortPathPointsPlusMitte.size()-1; i++) {
-            glVertex2d(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
-            glVertex2d(shortPathPointsPlusMitte.get(i+1).x, shortPathPointsPlusMitte.get(i+1).y);
+        for (int i = 0; i < shortPathPoints.size()-1; i++) {
+            glVertex2d(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
+            glVertex2d(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
         }
         glEnd();
         g.visualize();
@@ -250,6 +236,27 @@ public class MySuperAI extends AI{
             }
         }
         return false;
+    }
+
+    public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
+        ArrayList<Node> highResPath = new ArrayList<>();
+        while (resolution != 0) {
+            int j = 0;
+            for (int i = 0; i < path.size()-1; i ++) {
+                Vector2f a = new Vector2f(path.get(i).x, path.get(i).y);
+                Node xn = new Node(a);
+                Vector2f b = new Vector2f(path.get(i+1).x, path.get(i+1).y);
+                Node yn = new Node(b);
+                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
+                Node nn = new Node(n);
+                highResPath.add(j, xn);
+                highResPath.add(j+1, nn);
+                highResPath.add(j+2, yn);
+                j = j + 3;
+            }
+            resolution--;
+        }
+        return highResPath;
     }
 }
 
