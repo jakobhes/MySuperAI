@@ -28,6 +28,7 @@ public class MySuperAI extends AI{
     float distToPointOnPath;
     float requiredAngularVelocity;
     ArrayList<Node>shortPathPoints;
+    ArrayList<Node> shortPathPointsPlusMitte;
 
 
 
@@ -60,14 +61,30 @@ public class MySuperAI extends AI{
             aStar = new AStar<>(g.graph);
             shortPathPoints = new ArrayList<>();
             shortPathPoints.addAll(aStar.astar(g.coords.get(g.coords.size() - 2), g.coords.get(g.coords.size() - 1)));
+            shortPathPointsPlusMitte = new ArrayList<>();
+            int j = 0;
+            for (int i = 0; i < shortPathPoints.size()-1; i ++) {
+                Vector2f a = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
+                Node xn = new Node(a);
+                Vector2f b = new Vector2f(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
+                Node yn = new Node(b);
+                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
+                Node nn = new Node(n);
+                shortPathPointsPlusMitte.add(j, xn);
+                shortPathPointsPlusMitte.add(j+1, nn);
+                shortPathPointsPlusMitte.add(j+2, yn);
+                j = j + 3;
+            }
         }
         if (wasResetAfterCollision) {
             i = 1;
         }
 
-        Vector2f currentPointOnPath = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
+//        Vector2f currentPointOnPath = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
+        Vector2f currentPointOnPath = new Vector2f(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
         distToPointOnPath = (float) (Math.sqrt(Math.pow(currentPointOnPath.x - info.getX(), 2) + Math.pow(currentPointOnPath.y - info.getY(), 2)));
-        if (distToPointOnPath < 40 && i != shortPathPoints.size()-1) {
+//        if (distToPointOnPath < 40 && i != shortPathPoints.size()-1) {
+        if (distToPointOnPath < 40 && i != shortPathPointsPlusMitte.size()-1) {
             i++;
         }
 
@@ -103,10 +120,14 @@ public class MySuperAI extends AI{
         glEnd();
         glBegin(GL_LINES);
         glColor3f(1,1,0);
-        for (int i = 0; i < shortPathPoints.size(); i++) {
-            glVertex2d(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-            if (i < shortPathPoints.size() -1)
-                glVertex2d(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
+//        for (int i = 0; i < shortPathPoints.size(); i++) {
+//            glVertex2d(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
+//            if (i < shortPathPoints.size() -1)
+//                glVertex2d(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
+//        }
+        for (int i = 0; i < shortPathPointsPlusMitte.size()-1; i++) {
+            glVertex2d(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
+            glVertex2d(shortPathPointsPlusMitte.get(i+1).x, shortPathPointsPlusMitte.get(i+1).y);
         }
         glEnd();
         g.visualize();
@@ -156,7 +177,7 @@ public class MySuperAI extends AI{
         if (Math.abs(angleBetweenPosAndDest) < tolerance) {
             requiredAngularVelocity = 0;
         }
-        else if (Math.abs(angleBetweenPosAndDest) < (Math.abs(info.getAngularVelocity())) && distanceToDest > 30) {
+        else if (Math.abs(angleBetweenPosAndDest) < (Math.abs(info.getAngularVelocity())) && distanceToDest > 20) {
             requiredAngularVelocity = angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / (Math.abs(info.getAngularVelocity()));//TODO: Tweak
         } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
     }
@@ -170,7 +191,7 @@ public class MySuperAI extends AI{
         float rayCastLength = info.getVelocity().length();
         //OLD STUFF
         if (distanceToDest >= 2*breakRad) {
-            rayCastLength = 1.6f * info.getVelocity().length();
+            rayCastLength = 2.5f * info.getVelocity().length();
         }
 //        if (distToPointOnPath >= 4*breakRad) {
 //            rayCastLength = 4 * info.getVelocity().length();
@@ -181,7 +202,7 @@ public class MySuperAI extends AI{
         Vector2f.add(currentPos, orientationWithLength, rayCastMiddle);
 
         //turn orientation vector
-        float fov = (float)Math.PI/6; //TODO: Tweak
+        float fov = (float)Math.PI/10; //TODO: Tweak
         float ox = orientationWithLength.x;
         float oy = orientationWithLength.y;
 

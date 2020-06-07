@@ -116,7 +116,6 @@ public class Graph {
     }
 
 
-
     public boolean intersects (Line2D edgeToCheck, Track track){
         float x1, x2, y1, y2;
         Polygon[] obstacles = track.getObstacles();
