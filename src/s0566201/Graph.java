@@ -27,7 +27,6 @@ public class Graph {
         float x2, x3, y2, y3;
         int offset = 20;
         Polygon[] obstacles = track.getObstacles();
-        Integer key = 0;
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
                 float x1 = obs.xpoints[j];
@@ -72,7 +71,6 @@ public class Graph {
                     Vector2f v = new Vector2f(x2, y2);
                     Node n = new Node(v);
                     coords.add(n);
-                    key++;
                 }
             }
         }
@@ -85,7 +83,6 @@ public class Graph {
             graph.addNode(coord);
         }
         createEdges(track);
-
     }
 
     public void addHeuristic() {
@@ -105,10 +102,7 @@ public class Graph {
             for (int j = 1; j < coords.size(); j++) {
                 edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
                 Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
-//              System.out.println("Node A: " + coords.get(i).getId());
-//              System.out.println("Node B: " + coords.get(j).getId());
-//              System.out.println("Distance: " + edgeMap.get(coords.get(j).getId()));
-//              System.out.println(coords.size());
+
                 if (!intersects(edgeToCheck, track))
                     graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
             }
@@ -143,7 +137,6 @@ public class Graph {
     }
 
     public void addNode (Node n) {
-
     }
 
 
