@@ -27,10 +27,7 @@ public class MySuperAI extends AI{
     float distanceToDest;
     float distToPointOnPath;
     float requiredAngularVelocity;
-    ArrayList<Node>shortPathPoints;
-    ArrayList<Node> shortPathPointsPlusMitte;
-
-
+    ArrayList<Node> shortestPath;
 
     public MySuperAI (Info info) {
         super(info);
@@ -59,32 +56,17 @@ public class MySuperAI extends AI{
             g.coords.add(current);
             g.createGraph(info.getTrack());
             aStar = new AStar<>(g.graph);
-            shortPathPoints = new ArrayList<>();
-            shortPathPoints.addAll(aStar.astar(g.coords.get(g.coords.size() - 2), g.coords.get(g.coords.size() - 1)));
-            shortPathPointsPlusMitte = new ArrayList<>();
-            int j = 0;
-            for (int i = 0; i < shortPathPoints.size()-1; i ++) {
-                Vector2f a = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-                Node xn = new Node(a);
-                Vector2f b = new Vector2f(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
-                Node yn = new Node(b);
-                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
-                Node nn = new Node(n);
-                shortPathPointsPlusMitte.add(j, xn);
-                shortPathPointsPlusMitte.add(j+1, nn);
-                shortPathPointsPlusMitte.add(j+2, yn);
-                j = j + 3;
-            }
+            shortestPath = new ArrayList<>();
+            shortestPath.addAll(aStar.astar(g.coords.get(g.coords.size() - 2), g.coords.get(g.coords.size() - 1)));
+            shortestPath = increasePathResolution(shortestPath, 2);
         }
         if (wasResetAfterCollision) {
             i = 1;
         }
 
-//        Vector2f currentPointOnPath = new Vector2f(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-        Vector2f currentPointOnPath = new Vector2f(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
+        Vector2f currentPointOnPath = new Vector2f(shortestPath.get(i).x, shortestPath.get(i).y);
         distToPointOnPath = (float) (Math.sqrt(Math.pow(currentPointOnPath.x - info.getX(), 2) + Math.pow(currentPointOnPath.y - info.getY(), 2)));
-//        if (distToPointOnPath < 40 && i != shortPathPoints.size()-1) {
-        if (distToPointOnPath < 40 && i != shortPathPointsPlusMitte.size()-1) {
+        if (distToPointOnPath < 40 && i != shortestPath.size()-1) {
             i++;
         }
 
@@ -102,7 +84,6 @@ public class MySuperAI extends AI{
         if (angularVelocity >= info.getMaxAbsoluteAngularAcceleration()) angularVelocity = info.getMaxAbsoluteAngularVelocity();
         else if (angularVelocity <= -info.getMaxAbsoluteAngularAcceleration()) angularVelocity = -info.getMaxAbsoluteAngularVelocity();
 
-//        return new DriverAction(acceleration(arrive(3f,40f)), angularVelocity);
         return new DriverAction(acceleration(arrive(10,info.getVelocity().length())), angularVelocity);
     }
 
@@ -120,14 +101,15 @@ public class MySuperAI extends AI{
         glEnd();
         glBegin(GL_LINES);
         glColor3f(1,1,0);
-//        for (int i = 0; i < shortPathPoints.size(); i++) {
-//            glVertex2d(shortPathPoints.get(i).x, shortPathPoints.get(i).y);
-//            if (i < shortPathPoints.size() -1)
-//                glVertex2d(shortPathPoints.get(i+1).x, shortPathPoints.get(i+1).y);
-//        }
-        for (int i = 0; i < shortPathPointsPlusMitte.size()-1; i++) {
-            glVertex2d(shortPathPointsPlusMitte.get(i).x, shortPathPointsPlusMitte.get(i).y);
-            glVertex2d(shortPathPointsPlusMitte.get(i+1).x, shortPathPointsPlusMitte.get(i+1).y);
+        for (int i = 0; i < shortestPath.size()-1; i++) {
+            glVertex2d(shortestPath.get(i).x, shortestPath.get(i).y);
+            glVertex2d(shortestPath.get(i+1).x, shortestPath.get(i+1).y);
+        }
+        glEnd();
+        glBegin(GL_POINTS);
+        glColor3f(1,1,1);
+        for (int i = 0; i < shortestPath.size()-1; i++) {
+            glVertex2d(shortestPath.get(i).x, shortestPath.get(i).y);
         }
         glEnd();
         g.visualize();
@@ -146,19 +128,9 @@ public class MySuperAI extends AI{
 
     public float arrive(float destinationRadius, float baseBreakRadius) {
 
-//        //OLD STUFF
-//        if (distanceToDest >= info.getVelocity().length()/baseBreakRadius) return info.getMaxVelocity();
-//        else {
-//            //if (distanceToDest < destinationRadius) return info.getMaxVelocity();
-//            return distanceToDest * info.getMaxVelocity() / baseBreakRadius;
-//        }
-        if (distanceToDest < destinationRadius) {
-            return info.getMaxVelocity();
-        } else if (distanceToDest < baseBreakRadius){
-            return distanceToDest * info.getMaxVelocity() / baseBreakRadius;
-        } else {
-            return info.getMaxVelocity();
-        }
+        if (distanceToDest < destinationRadius) return info.getMaxVelocity();
+        if (distanceToDest < baseBreakRadius) return distanceToDest * info.getMaxVelocity() / baseBreakRadius;
+        else return info.getMaxVelocity();
 
     }
 
@@ -171,31 +143,20 @@ public class MySuperAI extends AI{
         float angleBetweenPosAndDest = Vector2f.angle(orientation, destVector);
         float tolerance = 0.01f;
         float dot = orientation.x * -destVector.y + orientation.y * destVector.x;
-        if (dot > 0) {
-            angleBetweenPosAndDest = -angleBetweenPosAndDest;
-        }
-        if (Math.abs(angleBetweenPosAndDest) < tolerance) {
-            requiredAngularVelocity = 0;
-        }
+
+        if (dot > 0) angleBetweenPosAndDest = -angleBetweenPosAndDest;
+        if (Math.abs(angleBetweenPosAndDest) < tolerance) requiredAngularVelocity = 0;
         else if (Math.abs(angleBetweenPosAndDest) < (Math.abs(info.getAngularVelocity())) && distanceToDest > 20) {
-            requiredAngularVelocity = angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / (Math.abs(info.getAngularVelocity()));//TODO: Tweak
+            requiredAngularVelocity = angleBetweenPosAndDest * info.getMaxAbsoluteAngularVelocity() / (Math.abs(info.getAngularVelocity())); //TODO: Tweak
         } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
     }
 
-
-
-
     public void avoidObstacle(float breakRad) {
         Track track = info.getTrack();
-        Polygon[] obstacles = track.getObstacles(); //(Oberflaeche der) Hindernisse
         float rayCastLength = info.getVelocity().length();
-        //OLD STUFF
-        if (distanceToDest >= 2*breakRad) {
-            rayCastLength = 2.5f * info.getVelocity().length();
-        }
-//        if (distToPointOnPath >= 4*breakRad) {
-//            rayCastLength = 4 * info.getVelocity().length();
-//        }
+
+        if (distanceToDest >= 2*breakRad) rayCastLength = 2.5f * info.getVelocity().length();
+
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
 
         //Single Ray (middle)
@@ -222,12 +183,7 @@ public class MySuperAI extends AI{
         } else if (intersects(r, track)) {
             requiredAngularVelocity = info.getMaxAbsoluteAngularVelocity();
         }
-//        for (Polygon obstacle : obstacles) {
-//            if (obstacle.contains(rayLeft.x, rayLeft.y))
-//                requiredAngularVelocity = -info.getMaxAbsoluteAngularVelocity();
-//            else if (obstacle.contains(rayRight.x, rayRight.y))
-//                requiredAngularVelocity = info.getMaxAbsoluteAngularVelocity();
-//        }
+
     }
     public boolean intersects (Line2D edgeToCheck, Track track) {
         float x1, x2, y1, y2;
@@ -250,6 +206,29 @@ public class MySuperAI extends AI{
             }
         }
         return false;
+    }
+
+    // TODO: this should actually be in class Graph
+    public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
+        while (resolution != 0) {
+            ArrayList<Node> highResPath = new ArrayList<>();
+            int j = 0;
+            for (int i = 0; i < path.size()-1; i ++) {
+                Vector2f a = new Vector2f(path.get(i).x, path.get(i).y);
+                Node xn = new Node(a);
+                Vector2f b = new Vector2f(path.get(i+1).x, path.get(i+1).y);
+                Node yn = new Node(b);
+                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
+                Node nn = new Node(n);
+                highResPath.add(j, xn);
+                highResPath.add(j+1, nn);
+                highResPath.add(j+2, yn);
+                j = j + 3;
+            }
+            resolution--;
+            return increasePathResolution(highResPath, resolution);
+        }
+        return path;
     }
 }
 
