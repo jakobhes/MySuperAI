@@ -4,13 +4,11 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
-
 
 public class Graph {
 
@@ -18,11 +16,22 @@ public class Graph {
     public ArrayList<Node> coords = new ArrayList<>();
     public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
 
-    // public Graph(Polygon[] obstacles) { }
-
     public Graph() {}
 
-    // adds reflex corners and moves them away from obstacle
+    //TODO: This should be the Constructor
+    public void createGraph(Track track) {
+        addHeuristic();
+        graph = new GraphAStar<>(heuristic);
+        for (Node coord : coords) {
+            graph.addNode(coord);
+        }
+        createEdges(track);
+    }
+
+    /**
+     * adds nodes to the field coords that are used for the shortest way path, considering obstacles to drive around
+     * @param track: a track containing obstacles
+     **/
     public void checkCoordAndAdd(Track track) {
         float x2, x3, y2, y3;
         int offset = 20;
@@ -68,23 +77,17 @@ public class Graph {
                     double rotY = Math.sin(angle)*(v3.x-x2)+Math.cos(angle)*(v3.y-y2)+y2;
                     x2 = (float)rotX;
                     y2 = (float)rotY;
-                    Vector2f v = new Vector2f(x2, y2);
-                    Node n = new Node(v);
+
+                    Node n = new Node(new Vector2f(x2, y2));
                     coords.add(n);
                 }
             }
         }
     }
 
-    public void createGraph(Track track) {
-        addHeuristic();
-        graph = new GraphAStar<>(heuristic);
-        for (Node coord : coords) {
-            graph.addNode(coord);
-        }
-        createEdges(track);
-    }
-
+    /**
+     * calculates the heuristics of all coordinates to each other and puts them into the field heuristics
+     **/
     public void addHeuristic() {
         Map<Node, Double> heurMap = new HashMap<>();
         for (int i = 0; i < coords.size(); i++) {
@@ -95,8 +98,11 @@ public class Graph {
         }
     }
 
+    /**
+     * adds edges to the field graph if they don't intersect with an obstacle
+     * @param track: a track containing obstacles
+     **/
     public void createEdges(Track track) {
-
         for (int i = 0; i < coords.size(); i++) {
             Map<Node, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
@@ -110,6 +116,13 @@ public class Graph {
     }
 
 
+    //TODO: We also have this method in MySuperAI > refactor
+    /**
+     * Checks if an edge/line intersects with an obstacle on the track
+     * @param edgeToCheck: The edge/line to check
+     * @param track: the track containing the obstacles
+     * @return: Returns true if the edge intersects with any obstacle
+     **/
     public boolean intersects (Line2D edgeToCheck, Track track){
         float x1, x2, y1, y2;
         Polygon[] obstacles = track.getObstacles();
@@ -128,7 +141,7 @@ public class Graph {
                 if (l.intersectsLine(edgeToCheck)) {
                     return true;
 
-                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value
+                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value, also make it a param
                     return  true;
                 }
             }
@@ -136,21 +149,18 @@ public class Graph {
         return  false;
     }
 
-    public void addNode (Node n) {
-    }
-
-
+    /**
+     * calculates the distances between 2 nodes
+     * @param a: the first node
+     * @param b: the second node
+     * @return: the distance of 2 nodes as a double
+     **/
     public double calcDistanceBetween(Node a, Node b) {
         return (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
     }
 
 
-    /***
-
-     DEBUG
-
-     */
-
+    /*** DEBUG ***/
 
     public void visualize () {
         glBegin(GL_POINTS);
@@ -160,12 +170,6 @@ public class Graph {
             glVertex2d(reflexCorner.x, reflexCorner.y);
         }
         glEnd();
-//        glBegin(GL_LINES);
-//        for (Edge edge : edges) {
-//            glVertex2d(edge.a.x, edge.a.y);
-//            glVertex2d(edge.b.x, edge.b.y);
-//        }
-//        glEnd();
     }
 
 }
