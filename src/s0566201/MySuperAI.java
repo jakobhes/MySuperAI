@@ -126,20 +126,20 @@ public class MySuperAI extends AI{
         glEnd();
     }
 
-    public float arrive(float destinationRadius, float baseBreakRadius) {
 
+    public float arrive(float destinationRadius, float baseBreakRadius) {
         if (distanceToDest < destinationRadius) return info.getMaxVelocity();
         if (distanceToDest < baseBreakRadius) return distanceToDest * info.getMaxVelocity() / baseBreakRadius;
         else return info.getMaxVelocity();
-
     }
+
 
     public float acceleration(float speed) {
         return speed - info.getVelocity().length() / 1;
     }
 
-    public void align() {
 
+    public void align() {
         float angleBetweenPosAndDest = Vector2f.angle(orientation, destVector);
         float tolerance = 0.01f;
         float dot = orientation.x * -destVector.y + orientation.y * destVector.x;
@@ -151,6 +151,10 @@ public class MySuperAI extends AI{
         } else requiredAngularVelocity = (angleBetweenPosAndDest > tolerance) ? info.getMaxAbsoluteAngularVelocity() : -info.getMaxAbsoluteAngularVelocity();
     }
 
+    /**
+     * Casts 2 rays in a FOV-angle in front of the car, that check for obstacles in the way. If an obstacles is detected steers accordingly
+     * @param breakRad: The radius of a zone around checkpoints where the care should start to break.
+     **/
     public void avoidObstacle(float breakRad) {
         Track track = info.getTrack();
         float rayCastLength = info.getVelocity().length();
@@ -185,6 +189,14 @@ public class MySuperAI extends AI{
         }
 
     }
+
+    //TODO: We also have this method in Graph > refactor
+    /**
+     * Checks if an edge/line intersects with an obstacle on the track
+     * @param edgeToCheck: The edge/line to check
+     * @param track: the track containing the obstacles
+     * @return: Returns true if the edge intersects with any obstacle
+     **/
     public boolean intersects (Line2D edgeToCheck, Track track) {
         float x1, x2, y1, y2;
         Polygon[] obstacles = track.getObstacles();
@@ -208,6 +220,12 @@ public class MySuperAI extends AI{
         return false;
     }
 
+    /**
+     * Increases the amount of nodes in a path by adding new nodes between existing ones
+     * @param path: a list of nodes that represent a path
+     * @param resolution: the amount of times a section on the path is subdivided into new sections
+     * @return the new graph
+     **/
     // TODO: this should actually be in class Graph
     public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
         while (resolution != 0) {

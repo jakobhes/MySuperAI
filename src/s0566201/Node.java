@@ -7,7 +7,6 @@ import java.util.*;
 public class Node {
 
     public float x, y;
-//    public String id;
 
     @Override
     public boolean equals(Object o) {
