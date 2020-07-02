@@ -13,7 +13,7 @@ import java.util.*;
 
 public class MySuperAI extends AI{
 
-    Graph g = new Graph();
+    Graph g;
     AStar<Node> aStar;
     Track track;
     int i;
@@ -34,9 +34,8 @@ public class MySuperAI extends AI{
         track = info.getTrack();
         enlistForTournament(566201, 566843); //fuer Abgabe
         Node startNode = new Node(new Vector2f(info.getX(), info.getY()));
-        g.checkCoordAndAdd(track);
-        g.coords.add(startNode);
-        g.createGraph(info.getTrack());
+
+        g = new Graph(track, startNode);
     }
 
     @Override
@@ -54,7 +53,7 @@ public class MySuperAI extends AI{
         if (!g.coords.contains(current)) {
             i = 1;
             g.coords.add(current);
-            g.createGraph(info.getTrack());
+            g.draw(info.getTrack());
             aStar = new AStar<>(g.graph);
             shortestPath = new ArrayList<>();
             shortestPath.addAll(aStar.astar(g.coords.get(g.coords.size() - 2), g.coords.get(g.coords.size() - 1)));

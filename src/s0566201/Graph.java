@@ -18,8 +18,17 @@ public class Graph {
 
     public Graph() {}
 
-    //TODO: This should be the Constructor
-    public void createGraph(Track track) {
+    public Graph(Track track, Node startNode) {
+        checkCoordAndAdd(track);
+        coords.add(startNode);
+        draw(track);
+    }
+
+    /**
+     * draws the graph
+     * @param track: a track
+     **/
+    public void draw(Track track) {
         addHeuristic();
         graph = new GraphAStar<>(heuristic);
         for (Node coord : coords) {
