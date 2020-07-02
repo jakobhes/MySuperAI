@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,14 +17,29 @@ public class Graph {
     public GraphAStar<Node> graph;
     public ArrayList<Node> coords = new ArrayList<>();
     public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
+    public EdgeOperations eOp = new EdgeOperations();
 
     public Graph() {}
 
     public Graph(Track track, Node startNode) {
-        checkCoordAndAdd(track);
+        checkCoordAndAdd(track, track.getObstacles(), 20);
+        checkCoordAndAdd(track, track.getFastZones(), 1);
+        checkCoordAndAdd(track, track.getSlowZones(), 1);
         coords.add(startNode);
         draw(track);
     }
+
+
+//    public ArrayList<Vector2f> convertToArrayList(Polygon[] areas) {
+//        ArrayList vectorAL = new ArrayList();
+//        for (Polygon area : areas) {
+//            for (int j = 0; j < area.npoints; j++) {
+//                Vector2f x = new Vector2f(area.xpoints[j],area.ypoints[j]);
+//                vectorAL.add(x);
+//            }
+//        }
+//        return vectorAL;
+//    }
 
     /**
      * draws the graph
@@ -41,22 +57,11 @@ public class Graph {
     /**
      * adds nodes to the field coords that are used for the shortest way path, considering areas to drive around
      * @param track: a track containing areas
+     * @param areas: polygon arrays (obstacles, slow zones or fast zones)
+     * @param offset: distance between node of the graph and node of the polygon
      **/
-//    public void checkCoordAndAdd(Track track) {
-//        Polygon[] areaToCheck = track.getObstacles();
-//        checkCoords(areaToCheck);
-//        //irgendwas ausführen
-//        areaToCheck = track.getFastZones();
-//        checkCoords(areaToCheck);
-//        //irgendwas ausführen
-//        areaToCheck = track.getSlowZones();
-//        checkCoords(areaToCheck);
-//        //Polygon[] areas = track.getObstacles();
-//    }
-
-    public void checkCoordAndAdd(Track track, Polygon[] areas) {
+    public void checkCoordAndAdd(Track track, Polygon[] areas, int offset) {
         float x2, x3, y2, y3;
-        int offset = 20;
         for (Polygon area : areas) {
             for (int j = 0; j < area.npoints; j++) {
                 float x1 = area.xpoints[j];
