@@ -34,7 +34,9 @@ public class MySuperAI extends AI{
         track = info.getTrack();
         enlistForTournament(566201, 566843); //fuer Abgabe
         Node startNode = new Node(new Vector2f(info.getX(), info.getY()));
-        g.checkCoordAndAdd(track);
+        g.checkCoordAndAdd(track, track.getObstacles());
+        g.checkCoordAndAdd(track, track.getSlowZones());
+        //g.checkCoordAndAdd(track, track.getFastZones());
         g.coords.add(startNode);
         g.createGraph(info.getTrack());
     }

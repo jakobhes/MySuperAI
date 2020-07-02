@@ -4,6 +4,7 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ public class Graph {
 
     //TODO: This should be the Constructor
     public void createGraph(Track track) {
-        addHeuristic();
+        addHeuristic(track);
         graph = new GraphAStar<>(heuristic);
         for (Node coord : coords) {
             graph.addNode(coord);
@@ -32,10 +33,10 @@ public class Graph {
      * adds nodes to the field coords that are used for the shortest way path, considering obstacles to drive around
      * @param track: a track containing obstacles
      **/
-    public void checkCoordAndAdd(Track track) {
+    public void checkCoordAndAdd(Track track, Polygon[] obstacles) {
         float x2, x3, y2, y3;
         int offset = 20;
-        Polygon[] obstacles = track.getObstacles();
+        //Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
                 float x1 = obs.xpoints[j];
@@ -88,7 +89,7 @@ public class Graph {
     /**
      * calculates the heuristics of all coordinates to each other and puts them into the field heuristics
      **/
-    public void addHeuristic() {
+    public void addHeuristic(Track track) {
         Map<Node, Double> heurMap = new HashMap<>();
         for (int i = 0; i < coords.size(); i++) {
             for (int j = 1; j < coords.size(); j++) {
@@ -106,26 +107,34 @@ public class Graph {
         for (int i = 0; i < coords.size(); i++) {
             Map<Node, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
-                edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
                 Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
 
-                if (!intersects(edgeToCheck, track))
-                    graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                if (!intersects(edgeToCheck, track.getObstacles())) {
+                    if (intersects(edgeToCheck, track.getSlowZones())) {
+                        Node n = findIntersectionPoint(edgeToCheck, );
+                        edgeMap.put(coords.get(j), 2*calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    } else if (intersects(edgeToCheck, track.getFastZones())) {
+                        edgeMap.put(coords.get(j), 0.75*calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    } else {
+                        edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    }
+                }
             }
         }
     }
-
 
     //TODO: We also have this method in MySuperAI > refactor
     /**
      * Checks if an edge/line intersects with an obstacle on the track
      * @param edgeToCheck: The edge/line to check
-     * @param track: the track containing the obstacles
+     *
      * @return: Returns true if the edge intersects with any obstacle
      **/
-    public boolean intersects (Line2D edgeToCheck, Track track){
+    public boolean intersects (Line2D edgeToCheck, Polygon[] obstacles){
         float x1, x2, y1, y2;
-        Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
                 x1 = obs.xpoints[j];
@@ -140,8 +149,7 @@ public class Graph {
                 Line2D l = new Line2D.Float(x1, y1, x2, y2);
                 if (l.intersectsLine(edgeToCheck)) {
                     return true;
-
-                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value, also make it a param
+                } else if (edgeToCheck.ptSegDist(x1, y1) < 10){ //TODO: maybe tweak value, also make it a param
                     return  true;
                 }
             }
@@ -157,6 +165,26 @@ public class Graph {
      **/
     public double calcDistanceBetween(Node a, Node b) {
         return (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
+    }
+
+    private static Node findIntersectionPoint(Line2D l1, Line2D l2) {
+        double a1 = l1.getY2() - l1.getY1();
+        //double a1 = l1.e.y - l1.s.y;
+        double b1 = l1.getX1() - l1.getX2();
+        //double b1 = l1.s.x - l1.e.x;
+        double c1 = a1 * l1.getX1() + b1 * l1.getY1();
+        //double c1 = a1 * l1.s.x + b1 * l1.s.y;
+
+        double a2 = l2.getY2() - l2.getY1();
+        //double a2 = l2.e.y - l2.s.y;
+        double b2 = l2.getX1() - l2.getX2();
+        //double b2 = l2.s.x - l2.e.x;
+
+        double c2 = a2 * l2.getX1() + b2 * l2.getY1();
+        //double c2 = a2 * l2.s.x + b2 * l2.s.y;
+
+        double delta = a1 * b2 - a2 * b1;
+        return new Node (new Vector2f((float)((b2 * c1 - b1 * c2) / delta), (float)((a1 * c2 - a2 * c1) / delta));
     }
 
 
