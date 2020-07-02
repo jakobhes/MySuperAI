@@ -20,20 +20,17 @@ public class Graph {
     public Graph() {}
 
     public Graph(Track track, Node startNode) {
-        checkCoordAndAdd(track, track.getObstacles());
+        checkCoordAndAdd(track);
         coords.add(startNode);
-
-        addHeuristic(track);
-        graph = new GraphAStar<>(heuristic);
-        for (Node coord : coords) {
-            graph.addNode(coord);
-        }
-        createEdges(track);
+        draw(track);
     }
 
-    //TODO: This should be the Constructor
-    public void createGraph(Track track) {
-        addHeuristic(track);
+    /**
+     * draws the graph
+     * @param track: a track
+     **/
+    public void draw(Track track) {
+        addHeuristic();
         graph = new GraphAStar<>(heuristic);
         for (Node coord : coords) {
             graph.addNode(coord);
@@ -112,7 +109,7 @@ public class Graph {
     /**
      * calculates the heuristics of all coordinates to each other and puts them into the field heuristics
      **/
-    public void addHeuristic(Track track) {
+    public void addHeuristic() {
         Map<Node, Double> heurMap = new HashMap<>();
         for (int i = 0; i < coords.size(); i++) {
             for (int j = 1; j < coords.size(); j++) {
