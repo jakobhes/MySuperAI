@@ -19,6 +19,18 @@ public class Graph {
 
     public Graph() {}
 
+    public Graph(Track track, Node startNode) {
+        checkCoordAndAdd(track, track.getObstacles());
+        coords.add(startNode);
+
+        addHeuristic(track);
+        graph = new GraphAStar<>(heuristic);
+        for (Node coord : coords) {
+            graph.addNode(coord);
+        }
+        createEdges(track);
+    }
+
     //TODO: This should be the Constructor
     public void createGraph(Track track) {
         addHeuristic(track);
@@ -30,32 +42,43 @@ public class Graph {
     }
 
     /**
-     * adds nodes to the field coords that are used for the shortest way path, considering obstacles to drive around
-     * @param track: a track containing obstacles
+     * adds nodes to the field coords that are used for the shortest way path, considering areas to drive around
+     * @param track: a track containing areas
      **/
-    public void checkCoordAndAdd(Track track, Polygon[] obstacles) {
+//    public void checkCoordAndAdd(Track track) {
+//        Polygon[] areaToCheck = track.getObstacles();
+//        checkCoords(areaToCheck);
+//        //irgendwas ausführen
+//        areaToCheck = track.getFastZones();
+//        checkCoords(areaToCheck);
+//        //irgendwas ausführen
+//        areaToCheck = track.getSlowZones();
+//        checkCoords(areaToCheck);
+//        //Polygon[] areas = track.getObstacles();
+//    }
+
+    public void checkCoordAndAdd(Track track, Polygon[] areas) {
         float x2, x3, y2, y3;
         int offset = 20;
-        //Polygon[] obstacles = track.getObstacles();
-        for (Polygon obs : obstacles) {
-            for (int j = 0; j < obs.npoints; j++) {
-                float x1 = obs.xpoints[j];
-                float y1 = obs.ypoints[j];
-                if (j == obs.npoints - 1) {
-                    x2 = obs.xpoints[0];
-                    y2 = obs.ypoints[0];
-                    x3 = obs.xpoints[1];
-                    y3 = obs.ypoints[1];
-                } else if (j == obs.npoints - 2) {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[0];
-                    y3 = obs.ypoints[0];
+        for (Polygon area : areas) {
+            for (int j = 0; j < area.npoints; j++) {
+                float x1 = area.xpoints[j];
+                float y1 = area.ypoints[j];
+                if (j == area.npoints - 1) {
+                    x2 = area.xpoints[0];
+                    y2 = area.ypoints[0];
+                    x3 = area.xpoints[1];
+                    y3 = area.ypoints[1];
+                } else if (j == area.npoints - 2) {
+                    x2 = area.xpoints[j + 1];
+                    y2 = area.ypoints[j + 1];
+                    x3 = area.xpoints[0];
+                    y3 = area.ypoints[0];
                 } else {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[j + 2];
-                    y3 = obs.ypoints[j + 2];
+                    x2 = area.xpoints[j + 1];
+                    y2 = area.ypoints[j + 1];
+                    x3 = area.xpoints[j + 2];
+                    y3 = area.ypoints[j + 2];
                 }
 
                 Vector2f v1 = new Vector2f(x2 - x1, y2 - y1);
@@ -111,7 +134,7 @@ public class Graph {
 
                 if (!intersects(edgeToCheck, track.getObstacles())) {
                     if (intersects(edgeToCheck, track.getSlowZones())) {
-                        Node n = findIntersectionPoint(edgeToCheck, );
+                        // Node n = findIntersectionPoint(edgeToCheck, );
                         edgeMap.put(coords.get(j), 2*calcDistanceBetween(coords.get(i), coords.get(j)));
                         graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
                     } else if (intersects(edgeToCheck, track.getFastZones())) {
@@ -184,7 +207,7 @@ public class Graph {
         //double c2 = a2 * l2.s.x + b2 * l2.s.y;
 
         double delta = a1 * b2 - a2 * b1;
-        return new Node (new Vector2f((float)((b2 * c1 - b1 * c2) / delta), (float)((a1 * c2 - a2 * c1) / delta));
+        return new Node (new Vector2f((float)((b2 * c1 - b1 * c2) / delta), (float)((a1 * c2 - a2 * c1) / delta)));
     }
 
 
