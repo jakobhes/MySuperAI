@@ -17,7 +17,6 @@ public class Graph {
     public GraphAStar<Node> graph;
     public ArrayList<Node> coords = new ArrayList<>();
     public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
-    public EdgeOperations eOp = new EdgeOperations();
 
     public Graph() {}
 
