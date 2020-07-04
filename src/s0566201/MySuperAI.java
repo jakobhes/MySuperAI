@@ -158,7 +158,7 @@ public class MySuperAI extends AI{
         Track track = info.getTrack();
         float rayCastLength = info.getVelocity().length();
 
-        if (distanceToDest >= 2*breakRad) rayCastLength = 2.5f * info.getVelocity().length();
+        if (distanceToDest >= 2*breakRad) rayCastLength = 1.5f * info.getVelocity().length();
 
         Vector2f orientationWithLength = (Vector2f)orientation.scale(rayCastLength);
 
