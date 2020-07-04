@@ -22,9 +22,9 @@ public class Graph {
     public Graph() {}
 
     public Graph(Track track, Node startNode) {
-        checkCoordAndAdd(track, track.getObstacles(), 20);
-        checkCoordAndAdd(track, track.getFastZones(), 1);
-        checkCoordAndAdd(track, track.getSlowZones(), 1);
+        checkCoordAndAdd(track, track.getObstacles(), 20, false);
+        checkCoordAndAdd(track, track.getFastZones(), 5, false);
+        checkCoordAndAdd(track, track.getSlowZones(), 5, false);
         coords.add(startNode);
         draw(track);
     }
@@ -60,7 +60,8 @@ public class Graph {
      * @param areas: polygon arrays (obstacles, slow zones or fast zones)
      * @param offset: distance between node of the graph and node of the polygon
      **/
-    public void checkCoordAndAdd(Track track, Polygon[] areas, int offset) {
+    public void checkCoordAndAdd(Track track, Polygon[] areas, int offset, boolean isObstacle) {
+        ArrayList<Node> highRes = new ArrayList<>();
         float x2, x3, y2, y3;
         for (Polygon area : areas) {
             for (int j = 0; j < area.npoints; j++) {
@@ -105,10 +106,47 @@ public class Graph {
                     y2 = (float)rotY;
 
                     Node n = new Node(new Vector2f(x2, y2));
-                    coords.add(n);
+
+                    if (isObstacle) {
+                        coords.add(n);
+                    } else {
+                        highRes.add(n);
+                    }
+
+
                 }
             }
         }
+        if (!isObstacle) coords.addAll(increasePathResolution(highRes, 1));
+    }
+
+    /**
+     * Increases the amount of nodes in a path by adding new nodes between existing ones
+     * @param path: a list of nodes that represent a path
+     * @param resolution: the amount of times a section on the path is subdivided into new sections
+     * @return the new graph
+     **/
+    // TODO: this should actually be in class Graph
+    public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
+        while (resolution != 0) {
+            ArrayList<Node> highResPath = new ArrayList<>();
+            int j = 0;
+            for (int i = 0; i < path.size()-1; i ++) {
+                Vector2f a = new Vector2f(path.get(i).x, path.get(i).y);
+                Node xn = new Node(a);
+                Vector2f b = new Vector2f(path.get(i+1).x, path.get(i+1).y);
+                Node yn = new Node(b);
+                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
+                Node nn = new Node(n);
+                highResPath.add(j, xn);
+                highResPath.add(j+1, nn);
+                highResPath.add(j+2, yn);
+                j = j + 3;
+            }
+            resolution--;
+            return increasePathResolution(highResPath, resolution);
+        }
+        return path;
     }
 
     /**
@@ -129,6 +167,9 @@ public class Graph {
      * @param track: a track containing obstacles
      **/
     public void createEdges(Track track) {
+        double slowZoneWeight = 4;
+        double fastZoneWeight = 0.75;
+
         for (int i = 0; i < coords.size(); i++) {
             Map<Node, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
@@ -137,10 +178,10 @@ public class Graph {
                 if (!intersects(edgeToCheck, track.getObstacles())) {
                     if (intersects(edgeToCheck, track.getSlowZones())) {
                         // Node n = findIntersectionPoint(edgeToCheck, );
-                        edgeMap.put(coords.get(j), 2*calcDistanceBetween(coords.get(i), coords.get(j)));
+                        edgeMap.put(coords.get(j), slowZoneWeight * calcDistanceBetween(coords.get(i), coords.get(j)));
                         graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
                     } else if (intersects(edgeToCheck, track.getFastZones())) {
-                        edgeMap.put(coords.get(j), 0.75*calcDistanceBetween(coords.get(i), coords.get(j)));
+                        edgeMap.put(coords.get(j), fastZoneWeight * calcDistanceBetween(coords.get(i), coords.get(j)));
                         graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
                     } else {
                         edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
@@ -221,6 +262,14 @@ public class Graph {
         for (Node reflexCorner : coords) {
             glPointSize(0.1f);
             glVertex2d(reflexCorner.x, reflexCorner.y);
+        }
+        glEnd();
+
+        glBegin(GL_LINES);
+        glColor3f(1,1,1);
+        for (Node node : graph) {
+            glVertex2d(node.getX(), node.getY());
+
         }
         glEnd();
     }

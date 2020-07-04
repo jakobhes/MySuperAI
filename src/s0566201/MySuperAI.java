@@ -98,6 +98,8 @@ public class MySuperAI extends AI{
         glVertex2f(info.getX(), info.getY());
         glVertex2d(info.getCurrentCheckpoint().getX(), info.getCurrentCheckpoint().getY());
         glEnd();
+
+        // Show shortest Path Edges
         glBegin(GL_LINES);
         glColor3f(1,1,0);
         for (int i = 0; i < shortestPath.size()-1; i++) {
@@ -105,6 +107,8 @@ public class MySuperAI extends AI{
             glVertex2d(shortestPath.get(i+1).x, shortestPath.get(i+1).y);
         }
         glEnd();
+
+        // Show shortest Path Nodes
         glBegin(GL_POINTS);
         glColor3f(1,1,1);
         for (int i = 0; i < shortestPath.size()-1; i++) {
