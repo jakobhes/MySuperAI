@@ -229,7 +229,7 @@ public class MySuperAI extends AI{
      * @param resolution: the amount of times a section on the path is subdivided into new sections
      * @return the new graph
      **/
-    // TODO: this should actually be in class Graph
+    // TODO: duplicate method, take method from graph and delete this
     public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
         while (resolution != 0) {
             ArrayList<Node> highResPath = new ArrayList<>();

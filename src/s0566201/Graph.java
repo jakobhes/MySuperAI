@@ -4,9 +4,7 @@ import lenz.htw.ai4g.track.Track;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,27 +16,13 @@ public class Graph {
     public ArrayList<Node> coords = new ArrayList<>();
     public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
 
-    public Graph() {}
-
     public Graph(Track track, Node startNode) {
-        checkCoordAndAdd(track, track.getObstacles(), 20, false);
+        checkCoordAndAdd(track, track.getObstacles(), 20, true);
         checkCoordAndAdd(track, track.getFastZones(), 5, false);
         checkCoordAndAdd(track, track.getSlowZones(), 5, false);
         coords.add(startNode);
         draw(track);
     }
-
-
-//    public ArrayList<Vector2f> convertToArrayList(Polygon[] areas) {
-//        ArrayList vectorAL = new ArrayList();
-//        for (Polygon area : areas) {
-//            for (int j = 0; j < area.npoints; j++) {
-//                Vector2f x = new Vector2f(area.xpoints[j],area.ypoints[j]);
-//                vectorAL.add(x);
-//            }
-//        }
-//        return vectorAL;
-//    }
 
     /**
      * draws the graph
@@ -125,7 +109,6 @@ public class Graph {
      * @param resolution: the amount of times a section on the path is subdivided into new sections
      * @return the new graph
      **/
-    // TODO: this should actually be in class Graph
     public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
         while (resolution != 0) {
             ArrayList<Node> highResPath = new ArrayList<>();
@@ -166,8 +149,8 @@ public class Graph {
      * @param track: a track containing obstacles
      **/
     public void createEdges(Track track) {
-        double slowZoneWeight = 4;
-        double fastZoneWeight = 0.75;
+        double slowZoneWeight = 3;
+        double fastZoneWeight = 0.7;
 
         for (int i = 0; i < coords.size(); i++) {
             Map<Node, Double> edgeMap = new HashMap<>();
@@ -198,7 +181,7 @@ public class Graph {
      *
      * @return: Returns true if the edge intersects with any obstacle
      **/
-    public boolean intersects (Line2D edgeToCheck, Polygon[] obstacles){
+    public boolean intersects(Line2D edgeToCheck, Polygon[] obstacles){
         float x1, x2, y1, y2;
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
@@ -214,13 +197,16 @@ public class Graph {
                 Line2D l = new Line2D.Float(x1, y1, x2, y2);
                 if (l.intersectsLine(edgeToCheck)) {
                     return true;
-                } else if (edgeToCheck.ptSegDist(x1, y1) < 10){ //TODO: maybe tweak value, also make it a param
-                    return  true;
                 }
+
+//                else if (edgeToCheck.ptSegDist(x1, y1) < 10){ //TODO: maybe tweak value, also make it a param
+//                    return  true;
+//                }
             }
         }
         return  false;
     }
+
 
     /**
      * calculates the distances between 2 nodes
@@ -232,26 +218,6 @@ public class Graph {
         return (Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2)));
     }
 
-    private static Node findIntersectionPoint(Line2D l1, Line2D l2) {
-        double a1 = l1.getY2() - l1.getY1();
-        //double a1 = l1.e.y - l1.s.y;
-        double b1 = l1.getX1() - l1.getX2();
-        //double b1 = l1.s.x - l1.e.x;
-        double c1 = a1 * l1.getX1() + b1 * l1.getY1();
-        //double c1 = a1 * l1.s.x + b1 * l1.s.y;
-
-        double a2 = l2.getY2() - l2.getY1();
-        //double a2 = l2.e.y - l2.s.y;
-        double b2 = l2.getX1() - l2.getX2();
-        //double b2 = l2.s.x - l2.e.x;
-
-        double c2 = a2 * l2.getX1() + b2 * l2.getY1();
-        //double c2 = a2 * l2.s.x + b2 * l2.s.y;
-
-        double delta = a1 * b2 - a2 * b1;
-        return new Node (new Vector2f((float)((b2 * c1 - b1 * c2) / delta), (float)((a1 * c2 - a2 * c1) / delta)));
-    }
-
 
     /*** DEBUG ***/
 
@@ -261,14 +227,6 @@ public class Graph {
         for (Node reflexCorner : coords) {
             glPointSize(0.1f);
             glVertex2d(reflexCorner.x, reflexCorner.y);
-        }
-        glEnd();
-
-        glBegin(GL_LINES);
-        glColor3f(1,1,1);
-        for (Node node : graph) {
-            glVertex2d(node.getX(), node.getY());
-
         }
         glEnd();
     }
