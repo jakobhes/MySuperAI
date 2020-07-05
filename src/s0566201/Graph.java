@@ -16,10 +16,10 @@ public class Graph {
     public ArrayList<Node> coords = new ArrayList<>();
     public Map<Node, Map<Node, Double>> heuristic = new HashMap<>();
 
-    public Graph() {}
-
     public Graph(Track track, Node startNode) {
-        checkCoordAndAdd(track);
+        checkCoordAndAdd(track, track.getObstacles(), 20, true);
+        checkCoordAndAdd(track, track.getFastZones(), 5, false);
+        checkCoordAndAdd(track, track.getSlowZones(), 5, false);
         coords.add(startNode);
         draw(track);
     }
@@ -38,32 +38,33 @@ public class Graph {
     }
 
     /**
-     * adds nodes to the field coords that are used for the shortest way path, considering obstacles to drive around
-     * @param track: a track containing obstacles
+     * adds nodes to the field coords that are used for the shortest way path, considering areas to drive around
+     * @param track: a track containing areas
+     * @param areas: polygon arrays (obstacles, slow zones or fast zones)
+     * @param offset: distance between node of the graph and node of the polygon
      **/
-    public void checkCoordAndAdd(Track track) {
+    public void checkCoordAndAdd(Track track, Polygon[] areas, int offset, boolean isObstacle) {
+        ArrayList<Node> highRes = new ArrayList<>();
         float x2, x3, y2, y3;
-        int offset = 20;
-        Polygon[] obstacles = track.getObstacles();
-        for (Polygon obs : obstacles) {
-            for (int j = 0; j < obs.npoints; j++) {
-                float x1 = obs.xpoints[j];
-                float y1 = obs.ypoints[j];
-                if (j == obs.npoints - 1) {
-                    x2 = obs.xpoints[0];
-                    y2 = obs.ypoints[0];
-                    x3 = obs.xpoints[1];
-                    y3 = obs.ypoints[1];
-                } else if (j == obs.npoints - 2) {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[0];
-                    y3 = obs.ypoints[0];
+        for (Polygon area : areas) {
+            for (int j = 0; j < area.npoints; j++) {
+                float x1 = area.xpoints[j];
+                float y1 = area.ypoints[j];
+                if (j == area.npoints - 1) {
+                    x2 = area.xpoints[0];
+                    y2 = area.ypoints[0];
+                    x3 = area.xpoints[1];
+                    y3 = area.ypoints[1];
+                } else if (j == area.npoints - 2) {
+                    x2 = area.xpoints[j + 1];
+                    y2 = area.ypoints[j + 1];
+                    x3 = area.xpoints[0];
+                    y3 = area.ypoints[0];
                 } else {
-                    x2 = obs.xpoints[j + 1];
-                    y2 = obs.ypoints[j + 1];
-                    x3 = obs.xpoints[j + 2];
-                    y3 = obs.ypoints[j + 2];
+                    x2 = area.xpoints[j + 1];
+                    y2 = area.ypoints[j + 1];
+                    x3 = area.xpoints[j + 2];
+                    y3 = area.ypoints[j + 2];
                 }
 
                 Vector2f v1 = new Vector2f(x2 - x1, y2 - y1);
@@ -88,10 +89,46 @@ public class Graph {
                     y2 = (float)rotY;
 
                     Node n = new Node(new Vector2f(x2, y2));
-                    coords.add(n);
+
+                    if (isObstacle) {
+                        coords.add(n);
+                    } else {
+                        highRes.add(n);
+                    }
+
+
                 }
             }
         }
+        if (!isObstacle) coords.addAll(increasePathResolution(highRes, 1));
+    }
+
+    /**
+     * Increases the amount of nodes in a path by adding new nodes between existing ones
+     * @param path: a list of nodes that represent a path
+     * @param resolution: the amount of times a section on the path is subdivided into new sections
+     * @return the new graph
+     **/
+    public ArrayList<Node> increasePathResolution(ArrayList<Node> path, int resolution){
+        while (resolution != 0) {
+            ArrayList<Node> highResPath = new ArrayList<>();
+            int j = 0;
+            for (int i = 0; i < path.size()-1; i ++) {
+                Vector2f a = new Vector2f(path.get(i).x, path.get(i).y);
+                Node xn = new Node(a);
+                Vector2f b = new Vector2f(path.get(i+1).x, path.get(i+1).y);
+                Node yn = new Node(b);
+                Vector2f n = new Vector2f((a.x+b.x)/2, (a.y + b.y)/2);
+                Node nn = new Node(n);
+                highResPath.add(j, xn);
+                highResPath.add(j+1, nn);
+                highResPath.add(j+2, yn);
+                j = j + 3;
+            }
+            resolution--;
+            return increasePathResolution(highResPath, resolution);
+        }
+        return path;
     }
 
     /**
@@ -112,29 +149,40 @@ public class Graph {
      * @param track: a track containing obstacles
      **/
     public void createEdges(Track track) {
+        double slowZoneWeight = 3;
+        double fastZoneWeight = 0.7;
+
         for (int i = 0; i < coords.size(); i++) {
             Map<Node, Double> edgeMap = new HashMap<>();
             for (int j = 1; j < coords.size(); j++) {
-                edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
                 Line2D edgeToCheck = new Line2D.Float(coords.get(i).x, coords.get(i).y, coords.get(j).x, coords.get(j).y);
 
-                if (!intersects(edgeToCheck, track))
-                    graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                if (!intersects(edgeToCheck, track.getObstacles())) {
+                    if (intersects(edgeToCheck, track.getSlowZones())) {
+                        // Node n = findIntersectionPoint(edgeToCheck, );
+                        edgeMap.put(coords.get(j), slowZoneWeight * calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    } else if (intersects(edgeToCheck, track.getFastZones())) {
+                        edgeMap.put(coords.get(j), fastZoneWeight * calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    } else {
+                        edgeMap.put(coords.get(j), calcDistanceBetween(coords.get(i), coords.get(j)));
+                        graph.addEdge(coords.get(i), coords.get(j), edgeMap.get(coords.get(j)));
+                    }
+                }
             }
         }
     }
-
 
     //TODO: We also have this method in MySuperAI > refactor
     /**
      * Checks if an edge/line intersects with an obstacle on the track
      * @param edgeToCheck: The edge/line to check
-     * @param track: the track containing the obstacles
+     *
      * @return: Returns true if the edge intersects with any obstacle
      **/
-    public boolean intersects (Line2D edgeToCheck, Track track){
+    public boolean intersects(Line2D edgeToCheck, Polygon[] obstacles){
         float x1, x2, y1, y2;
-        Polygon[] obstacles = track.getObstacles();
         for (Polygon obs : obstacles) {
             for (int j = 0; j < obs.npoints; j++) {
                 x1 = obs.xpoints[j];
@@ -149,14 +197,16 @@ public class Graph {
                 Line2D l = new Line2D.Float(x1, y1, x2, y2);
                 if (l.intersectsLine(edgeToCheck)) {
                     return true;
-
-                } else if (edgeToCheck.ptSegDist(x1, y1) < 7){ //TODO: maybe tweak value, also make it a param
-                    return  true;
                 }
+
+//                else if (edgeToCheck.ptSegDist(x1, y1) < 10){ //TODO: maybe tweak value, also make it a param
+//                    return  true;
+//                }
             }
         }
         return  false;
     }
+
 
     /**
      * calculates the distances between 2 nodes
